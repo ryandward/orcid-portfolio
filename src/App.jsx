@@ -50,6 +50,33 @@ export default function App() {
     return () => clearTimeout(id)
   }, [detailLevel])
 
+  // Touch-hover for level 3: first tap shows CRT effects, second tap navigates
+  useEffect(() => {
+    if (detailLevel !== 3) return
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+    if (!isTouch) return
+
+    function handleClick(e) {
+      const el = e.target.closest('.snake-card, .pub-card, .se-card, .kw, .lnk, .nav-a')
+      document.querySelectorAll('.th').forEach(node => {
+        if (node !== el) node.classList.remove('th')
+      })
+      if (!el) return
+      if (el.classList.contains('th')) {
+        el.classList.remove('th')
+        return
+      }
+      e.preventDefault()
+      el.classList.add('th')
+    }
+
+    document.addEventListener('click', handleClick, true)
+    return () => {
+      document.removeEventListener('click', handleClick, true)
+      document.querySelectorAll('.th').forEach(n => n.classList.remove('th'))
+    }
+  }, [detailLevel])
+
   const SE_CACHE_KEY = 'se_cache_v3'
   const SE_CACHE_TTL = 60 * 60 * 1000 // 1 hour
 
