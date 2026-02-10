@@ -293,12 +293,14 @@ body {
   grid-template-columns: repeat(2, 1fr);
   gap: 1.25rem;
 }
+.pub-grid > .reveal { display: flex; }
 .pub-card {
   padding: 1.4rem 1.5rem;
   display: flex; flex-direction: column;
   gap: 0.5rem;
   min-height: 140px;
   cursor: pointer;
+  flex: 1;
 }
 .pub-card .pub-card-top {
   display: flex; justify-content: space-between; align-items: center;
