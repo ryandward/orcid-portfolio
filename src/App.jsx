@@ -225,6 +225,11 @@ export default function App() {
           {seData.length > 0 && <a className="nav-a" href="#se">Stack Exchange</a>}
           {allKeywords.length > 0 && <a className="nav-a" href="#kw">Skills</a>}
           {allLinks.length > 0 && <a className="nav-a" href="#links">Links</a>}
+          <div className="nav-levels">
+            {[1, 2, 3].map(n => (
+              <button key={n} className={`nav-lvl${detailLevel === n ? ' active' : ''}`} onClick={() => setDetailLevel(n)}>{n}</button>
+            ))}
+          </div>
         </div>
       </nav>
 
@@ -339,7 +344,7 @@ export default function App() {
         <div className="footer-l">
           Publications via <a href={`https://orcid.org/${ORCID_ID}`} target="_blank" rel="noopener noreferrer">ORCID</a> &middot; Q&amp;A via <a href={`https://stackoverflow.com/users/${SE_USER_ID}`} target="_blank" rel="noopener noreferrer">Stack Exchange</a> &middot; Experience via LinkedIn
         </div>
-        <div className="footer-r">auto-refreshes on every visit <span className="footer-hint">· press 1 2 3</span></div>
+        <div className="footer-r">auto-refreshes on every visit</div>
       </footer>
       <div className={`detail-toast ${toast ? 'visible' : ''}`}>{toast}</div>
     </div>
