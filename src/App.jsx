@@ -52,7 +52,7 @@ export default function App() {
 
   // Touch-hover for level 3: first tap shows CRT effects, second tap navigates
   useEffect(() => {
-    if (detailLevel !== 3) return
+    if (detailLevel < 2) return
     const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
     if (!isTouch) return
 
