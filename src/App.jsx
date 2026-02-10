@@ -4,7 +4,6 @@ const ORCID_ID = '0000-0001-9537-2461'
 const API_BASE = `https://pub.orcid.org/v3.0/${ORCID_ID}`
 const HEADERS = { Accept: 'application/json' }
 
-// ─── LinkedIn static data ────────────────
 const LINKEDIN = {
   headline: "PhD Geneticist",
   location: "Santa Barbara, CA",
@@ -27,25 +26,16 @@ const LINKEDIN = {
 
 // ─── Helpers ─────────────────────────────
 function fmtEduDate(item) {
-  // Only show the end/completion date for degrees
   const endY = item['end-date']?.year?.value
   if (endY) return endY
   return 'In progress'
 }
-
-function workYear(w) {
-  return w['publication-date']?.year?.value || '\u2014'
-}
-
+function workYear(w) { return w['publication-date']?.year?.value || '\u2014' }
 function cleanType(t) { return t ? t.replace(/-/g, ' ') : '' }
-
 function getDoiUrl(extIds) {
   if (!extIds?.['external-id']) return null
   const doi = extIds['external-id'].find(e => e['external-id-type'] === 'doi')
-  if (doi) {
-    const v = doi['external-id-value']
-    return v.startsWith('http') ? v : `https://doi.org/${v}`
-  }
+  if (doi) { const v = doi['external-id-value']; return v.startsWith('http') ? v : `https://doi.org/${v}` }
   const u = extIds['external-id'].find(e => e['external-id-url']?.value)
   return u?.['external-id-url']?.value || null
 }
@@ -62,6 +52,52 @@ const Chain = () => (
     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
   </svg>
 )
+
+// ─── Snake Timeline ──────────────────────
+function SnakeTimeline({ items, type }) {
+  return (
+    <div className="snake">
+      {items.map((item, i) => {
+        const isLeft = i % 2 === 0
+        const isLast = i === items.length - 1
+        const isCurrent = type === 'xp' ? item.current : false
+
+        return (
+          <div className="snake-row" key={i}>
+            {/* The connector lines */}
+            <div className={`snake-track ${isLeft ? 'left' : 'right'} ${isLast ? 'last' : ''}`}>
+              <div className={`snake-node ${isCurrent ? 'now' : ''}`} />
+            </div>
+            {/* The card */}
+            <div className={`snake-card ${isLeft ? 'left' : 'right'}`}>
+              {type === 'xp' ? (
+                <>
+                  <div className="snake-dates">
+                    {item.start} &mdash; {item.end || 'Present'}
+                    {item.location && <span className="snake-loc"> / {item.location}</span>}
+                  </div>
+                  <div className="snake-role">{item.title}</div>
+                  <div className="snake-org">{item.org}</div>
+                </>
+              ) : (
+                <>
+                  <div className="snake-dates">{fmtEduDate(item)}</div>
+                  <div className="snake-role">
+                    {item['role-title'] || item['department-name'] || 'Student'}
+                  </div>
+                  <div className="snake-org">{item.organization?.name}</div>
+                  {item['role-title'] && item['department-name'] && (
+                    <div className="snake-dept">{item['department-name']}</div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
 
 // ─── App ─────────────────────────────────
 export default function App() {
@@ -81,18 +117,14 @@ export default function App() {
       ])
       if (!pRes.ok) throw new Error('ORCID API returned ' + pRes.status)
       setPerson(await pRes.json())
-
       const wd = await wRes.json()
       setWorks(
-        (wd.group || [])
-          .map(g => g['work-summary']?.[0]).filter(Boolean)
+        (wd.group || []).map(g => g['work-summary']?.[0]).filter(Boolean)
           .sort((a, b) => (parseInt(workYear(b)) || 0) - (parseInt(workYear(a)) || 0))
       )
-
       const ed = await eRes.json()
       setEducations(
-        (ed['affiliation-group'] || [])
-          .map(g => g.summaries?.[0]?.['education-summary']).filter(Boolean)
+        (ed['affiliation-group'] || []).map(g => g.summaries?.[0]?.['education-summary']).filter(Boolean)
           .sort((a, b) =>
             (parseInt(b['end-date']?.year?.value || b['start-date']?.year?.value) || 0) -
             (parseInt(a['end-date']?.year?.value || a['start-date']?.year?.value) || 0)
@@ -123,16 +155,13 @@ export default function App() {
   const keywords = (person?.keywords?.keyword || []).map(k => k.content)
   const orcidUrls = (person?.['researcher-urls']?.['researcher-url'] || [])
     .map(u => ({ name: u['url-name'], url: u.url?.value }))
-
   const allLinks = [...LINKEDIN.links]
   orcidUrls.forEach(u => { if (!allLinks.some(l => l.url === u.url)) allLinks.push(u) })
   const allKeywords = [...new Set([...keywords, ...LINKEDIN.skills])]
-
   let n = 0
 
   return (
     <div className="portfolio">
-      {/* ═══ HERO ═══ */}
       <header className="hero">
         <div className="hero-bg"/>
         <div className="hero-grid"/>
@@ -162,7 +191,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* ═══ NAV ═══ */}
       <nav className="nav">
         <div className="nav-inner">
           <a className="nav-a" href="#xp">Experience</a>
@@ -173,29 +201,15 @@ export default function App() {
         </div>
       </nav>
 
-      {/* ═══ EXPERIENCE ═══ */}
       <section className="section" id="xp">
         <div className="sec-head">
           <span className="sec-label">0{++n}</span>
           <h2 className="sec-title">Experience</h2>
           <div className="sec-line"/>
         </div>
-        <div className="timeline">
-          {LINKEDIN.experience.map((j, i) => (
-            <div className={`tl-item ${j.current ? 'now' : ''}`} key={i}>
-              <div className="tl-dot"/>
-              <div className="tl-dates">
-                {j.start} &mdash; {j.end || 'Present'}
-                {j.location && <span className="loc">{j.location}</span>}
-              </div>
-              <div className="tl-role">{j.title}</div>
-              <div className="tl-org">{j.org}</div>
-            </div>
-          ))}
-        </div>
+        <SnakeTimeline items={LINKEDIN.experience} type="xp"/>
       </section>
 
-      {/* ═══ EDUCATION ═══ */}
       {educations.length > 0 && (
         <section className="section" id="edu">
           <div className="sec-head">
@@ -203,25 +217,10 @@ export default function App() {
             <h2 className="sec-title">Education</h2>
             <div className="sec-line"/>
           </div>
-          <div className="timeline">
-            {educations.map((edu, i) => (
-              <div className="tl-item" key={i}>
-                <div className="tl-dot"/>
-                <div className="tl-dates">{fmtEduDate(edu)}</div>
-                <div className="tl-role">
-                  {edu['role-title'] || edu['department-name'] || 'Student'}
-                </div>
-                <div className="tl-org">{edu.organization?.name}</div>
-                {edu['role-title'] && edu['department-name'] && (
-                  <div className="tl-dept">{edu['department-name']}</div>
-                )}
-              </div>
-            ))}
-          </div>
+          <SnakeTimeline items={educations} type="edu"/>
         </section>
       )}
 
-      {/* ═══ PUBLICATIONS ═══ */}
       {works.length > 0 && (
         <section className="section" id="pub">
           <div className="sec-head">
@@ -257,7 +256,6 @@ export default function App() {
         </section>
       )}
 
-      {/* ═══ SKILLS ═══ */}
       {allKeywords.length > 0 && (
         <section className="section" id="kw">
           <div className="sec-head">
@@ -271,7 +269,6 @@ export default function App() {
         </section>
       )}
 
-      {/* ═══ LINKS ═══ */}
       {allLinks.length > 0 && (
         <section className="section" id="links">
           <div className="sec-head">
@@ -293,7 +290,6 @@ export default function App() {
         </section>
       )}
 
-      {/* ═══ FOOTER ═══ */}
       <footer className="footer">
         <div className="footer-l">
           Publications via <a href={`https://orcid.org/${ORCID_ID}`} target="_blank" rel="noopener noreferrer">ORCID</a> &middot; Experience via LinkedIn
