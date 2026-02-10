@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { ORCID_ID, API_BASE, HEADERS, LINKEDIN, SE_USER_ID, SE_API, SE_KEY } from './constants'
 import { workYear, cleanType, getDoiUrl, fixTitle } from './utils'
 import { Arrow, Chain } from './components/Icons'
@@ -27,7 +27,7 @@ export default function App() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.body.className = `detail-${detailLevel}`
   }, [detailLevel])
 
