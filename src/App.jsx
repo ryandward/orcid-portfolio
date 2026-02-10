@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ORCID_ID, API_BASE, HEADERS, LINKEDIN, SE_USER_ID, SE_API, SE_KEY } from './constants'
-import { workYear, cleanType, getDoiUrl } from './utils'
+import { workYear, cleanType, getDoiUrl, fixTitle } from './utils'
 import { Arrow, Chain } from './components/Icons'
 import CountUp from './components/CountUp'
 import Typer from './components/Typer'
@@ -18,12 +18,37 @@ export default function App() {
   const [educations, setEducations] = useState([])
   const [seData, setSeData] = useState([])
   const [scrollY, setScrollY] = useState(0)
+  const [detailLevel, setDetailLevel] = useState(2)
+  const [toast, setToast] = useState(null)
 
   useEffect(() => {
     const onScroll = () => setScrollY(window.scrollY)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  useEffect(() => {
+    document.body.className = `detail-${detailLevel}`
+  }, [detailLevel])
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+      const n = parseInt(e.key)
+      if (n >= 1 && n <= 3) setDetailLevel(n)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  const didMount = useRef(false)
+  useEffect(() => {
+    if (!didMount.current) { didMount.current = true; return }
+    const labels = { 1: 'css: unloaded', 2: 'detail: normal', 3: 'DETAIL: MAXIMUM OVERDRIVE' }
+    setToast(labels[detailLevel])
+    const id = setTimeout(() => setToast(null), 1500)
+    return () => clearTimeout(id)
+  }, [detailLevel])
 
   const SE_CACHE_KEY = 'se_cache_v3'
   const SE_CACHE_TTL = 60 * 60 * 1000 // 1 hour
@@ -163,11 +188,11 @@ export default function App() {
     <div className="portfolio">
       <header className="hero">
         <div className="hero-bg"/>
-        <div className="hero-grid" style={{ transform: `translateY(${scrollY * 0.12}px)` }}/>
-        <DnaHelix/>
+        <div className="hero-grid" style={{ transform: `translateY(${scrollY * [0, 0, 0.12, 0.25][detailLevel]}px)` }}/>
+        <DnaHelix level={detailLevel}/>
         <div className="hero-inner">
           <div className="hero-prompt">
-            <Typer text="> researcher / engineer / builder" speed={28} delay={300}/>
+            <Typer text="> researcher / engineer / builder" speed={45} delay={300}/>
           </div>
           <h1 className="hero-name">
             <span className="hero-name-line" style={{ animationDelay: '0.4s' }}>{givenName}</span>
@@ -233,7 +258,7 @@ export default function App() {
           </div></Reveal>
           <div className="pub-grid">
               {works.map((w, i) => {
-                const title = w.title?.title?.value || 'Untitled'
+                const title = fixTitle(w.title?.title?.value) || 'Untitled'
                 const journal = w['journal-title']?.value || ''
                 const type = cleanType(w.type)
                 const year = workYear(w)
@@ -314,8 +339,9 @@ export default function App() {
         <div className="footer-l">
           Publications via <a href={`https://orcid.org/${ORCID_ID}`} target="_blank" rel="noopener noreferrer">ORCID</a> &middot; Q&amp;A via <a href={`https://stackoverflow.com/users/${SE_USER_ID}`} target="_blank" rel="noopener noreferrer">Stack Exchange</a> &middot; Experience via LinkedIn
         </div>
-        <div className="footer-r">auto-refreshes on every visit</div>
+        <div className="footer-r">auto-refreshes on every visit <span className="footer-hint">· press 1 2 3</span></div>
       </footer>
+      <div className={`detail-toast ${toast ? 'visible' : ''}`}>{toast}</div>
     </div>
   )
 }
