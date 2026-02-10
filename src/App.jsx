@@ -24,11 +24,7 @@ const LINKEDIN = {
   ],
 }
 
-// ─── Helpers ─────────────────────────────
-function fmtEduDate(item) {
-  const endY = item['end-date']?.year?.value
-  return endY || 'In progress'
-}
+function fmtEduDate(item) { return item['end-date']?.year?.value || 'In progress' }
 function workYear(w) { return w['publication-date']?.year?.value || '\u2014' }
 function cleanType(t) { return t ? t.replace(/-/g, ' ') : '' }
 function getDoiUrl(extIds) {
@@ -39,7 +35,6 @@ function getDoiUrl(extIds) {
   return u?.['external-id-url']?.value || null
 }
 
-// ─── Icons ───────────────────────────────
 const Arrow = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/>
@@ -52,7 +47,7 @@ const Chain = () => (
   </svg>
 )
 
-// ─── Intersection Observer hook ──────────
+// ─── Scroll reveal hook ──────────────────
 function useReveal(threshold = 0.15) {
   const ref = useRef(null)
   const [visible, setVisible] = useState(false)
@@ -69,7 +64,7 @@ function useReveal(threshold = 0.15) {
   return [ref, visible]
 }
 
-// ─── Animated counter ────────────────────
+// ─── Count-up ────────────────────────────
 function CountUp({ target, duration = 1200 }) {
   const [val, setVal] = useState(0)
   const [ref, visible] = useReveal(0.5)
@@ -78,8 +73,7 @@ function CountUp({ target, duration = 1200 }) {
     let start = 0
     const step = Math.max(1, Math.floor(duration / target))
     const timer = setInterval(() => {
-      start++
-      setVal(start)
+      start++; setVal(start)
       if (start >= target) clearInterval(timer)
     }, step)
     return () => clearInterval(timer)
@@ -87,102 +81,7 @@ function CountUp({ target, duration = 1200 }) {
   return <span ref={ref}>{val}</span>
 }
 
-// ─── DNA Helix Canvas ───────────────────
-function DnaHelix() {
-  const canvasRef = useRef(null)
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    let animId
-    let t = 0
-
-    function resize() {
-      canvas.width = canvas.offsetWidth * window.devicePixelRatio
-      canvas.height = canvas.offsetHeight * window.devicePixelRatio
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
-    }
-    resize()
-    window.addEventListener('resize', resize)
-
-    function draw() {
-      const w = canvas.offsetWidth
-      const h = canvas.offsetHeight
-      ctx.clearRect(0, 0, w, h)
-
-      const strands = 2
-      const points = 60
-      const amplitude = w * 0.12
-      const centerX = w * 0.82
-      const spacing = h / points
-
-      for (let i = 0; i < points; i++) {
-        const y = i * spacing
-        const phase = (i * 0.18) + t
-        const x1 = centerX + Math.sin(phase) * amplitude
-        const x2 = centerX + Math.sin(phase + Math.PI) * amplitude
-        const depth1 = (Math.sin(phase) + 1) / 2
-        const depth2 = (Math.sin(phase + Math.PI) + 1) / 2
-
-        // Connecting rungs
-        if (i % 3 === 0) {
-          ctx.beginPath()
-          ctx.moveTo(x1, y)
-          ctx.lineTo(x2, y)
-          ctx.strokeStyle = `rgba(0, 255, 136, ${0.04 + depth1 * 0.06})`
-          ctx.lineWidth = 1
-          ctx.stroke()
-        }
-
-        // Strand 1
-        if (i > 0) {
-          const py = (i - 1) * spacing
-          const px = centerX + Math.sin(((i - 1) * 0.18) + t) * amplitude
-          ctx.beginPath()
-          ctx.moveTo(px, py)
-          ctx.lineTo(x1, y)
-          ctx.strokeStyle = `rgba(0, 255, 136, ${0.08 + depth1 * 0.15})`
-          ctx.lineWidth = 1.5
-          ctx.stroke()
-        }
-        // Strand 2
-        if (i > 0) {
-          const py = (i - 1) * spacing
-          const px = centerX + Math.sin((((i - 1) * 0.18) + t) + Math.PI) * amplitude
-          ctx.beginPath()
-          ctx.moveTo(px, py)
-          ctx.lineTo(x2, y)
-          ctx.strokeStyle = `rgba(0, 212, 255, ${0.06 + depth2 * 0.12})`
-          ctx.lineWidth = 1.5
-          ctx.stroke()
-        }
-
-        // Nucleotide dots
-        ctx.beginPath()
-        ctx.arc(x1, y, 2 + depth1 * 1.5, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(0, 255, 136, ${0.15 + depth1 * 0.35})`
-        ctx.fill()
-
-        ctx.beginPath()
-        ctx.arc(x2, y, 2 + depth2 * 1.5, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(0, 212, 255, ${0.12 + depth2 * 0.3})`
-        ctx.fill()
-      }
-
-      t += 0.012
-      animId = requestAnimationFrame(draw)
-    }
-    draw()
-    return () => {
-      cancelAnimationFrame(animId)
-      window.removeEventListener('resize', resize)
-    }
-  }, [])
-
-  return <canvas ref={canvasRef} className="dna-canvas"/>
-}
-
-// ─── Typing Effect ───────────────────────
+// ─── Typer ───────────────────────────────
 function Typer({ text, speed = 45, delay = 400 }) {
   const [displayed, setDisplayed] = useState('')
   const [showCursor, setShowCursor] = useState(true)
@@ -190,12 +89,8 @@ function Typer({ text, speed = 45, delay = 400 }) {
     let i = 0
     const timeout = setTimeout(() => {
       const interval = setInterval(() => {
-        setDisplayed(text.slice(0, i + 1))
-        i++
-        if (i >= text.length) {
-          clearInterval(interval)
-          setTimeout(() => setShowCursor(false), 1500)
-        }
+        setDisplayed(text.slice(0, i + 1)); i++
+        if (i >= text.length) { clearInterval(interval); setTimeout(() => setShowCursor(false), 1500) }
       }, speed)
       return () => clearInterval(interval)
     }, delay)
@@ -204,17 +99,86 @@ function Typer({ text, speed = 45, delay = 400 }) {
   return <span>{displayed}{showCursor && <span className="cursor">|</span>}</span>
 }
 
+// ─── DNA Helix ───────────────────────────
+function DnaHelix() {
+  const canvasRef = useRef(null)
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    let animId, t = 0
+    function resize() {
+      canvas.width = canvas.offsetWidth * window.devicePixelRatio
+      canvas.height = canvas.offsetHeight * window.devicePixelRatio
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
+    }
+    resize()
+    window.addEventListener('resize', resize)
+    function draw() {
+      const w = canvas.offsetWidth, h = canvas.offsetHeight
+      ctx.clearRect(0, 0, w, h)
+      const points = 50, amplitude = w * 0.1, centerX = w * 0.85, spacing = h / points
+      for (let i = 0; i < points; i++) {
+        const y = i * spacing, phase = (i * 0.18) + t
+        const x1 = centerX + Math.sin(phase) * amplitude
+        const x2 = centerX + Math.sin(phase + Math.PI) * amplitude
+        const d1 = (Math.sin(phase) + 1) / 2, d2 = (Math.sin(phase + Math.PI) + 1) / 2
+        if (i % 3 === 0) {
+          ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y)
+          ctx.strokeStyle = `rgba(0,255,136,${0.03 + d1 * 0.05})`; ctx.lineWidth = 1; ctx.stroke()
+        }
+        if (i > 0) {
+          const py = (i-1)*spacing
+          ctx.beginPath(); ctx.moveTo(centerX + Math.sin(((i-1)*0.18)+t)*amplitude, py); ctx.lineTo(x1, y)
+          ctx.strokeStyle = `rgba(0,255,136,${0.06 + d1*0.12})`; ctx.lineWidth = 1.5; ctx.stroke()
+          ctx.beginPath(); ctx.moveTo(centerX + Math.sin(((i-1)*0.18)+t+Math.PI)*amplitude, py); ctx.lineTo(x2, y)
+          ctx.strokeStyle = `rgba(0,212,255,${0.04 + d2*0.1})`; ctx.lineWidth = 1.5; ctx.stroke()
+        }
+        ctx.beginPath(); ctx.arc(x1, y, 2+d1*1.5, 0, Math.PI*2)
+        ctx.fillStyle = `rgba(0,255,136,${0.12+d1*0.3})`; ctx.fill()
+        ctx.beginPath(); ctx.arc(x2, y, 2+d2*1.5, 0, Math.PI*2)
+        ctx.fillStyle = `rgba(0,212,255,${0.1+d2*0.25})`; ctx.fill()
+      }
+      t += 0.012; animId = requestAnimationFrame(draw)
+    }
+    draw()
+    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', resize) }
+  }, [])
+  return <canvas ref={canvasRef} className="dna-canvas"/>
+}
+
 // ─── Reveal wrapper ──────────────────────
 function Reveal({ children, delay = 0, className = '' }) {
   const [ref, visible] = useReveal(0.1)
   return (
-    <div
-      ref={ref}
-      className={`reveal ${visible ? 'visible' : ''} ${className}`}
-      style={{ transitionDelay: `${delay}ms` }}
-    >
+    <div ref={ref} className={`reveal ${visible ? 'visible' : ''} ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}>
       {children}
     </div>
+  )
+}
+
+// ─── Glow Card (mouse-tracking border glow) ─────
+function GlowCard({ children, className = '', href, onClick }) {
+  const cardRef = useRef(null)
+  const handleMouse = useCallback((e) => {
+    const card = cardRef.current
+    if (!card) return
+    const rect = card.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    card.style.setProperty('--glow-x', `${x}px`)
+    card.style.setProperty('--glow-y', `${y}px`)
+  }, [])
+
+  const Tag = href ? 'a' : 'div'
+  const extraProps = href ? { href, target: '_blank', rel: 'noopener noreferrer' } : {}
+
+  return (
+    <Tag ref={cardRef} className={`glow-card ${className}`}
+      onMouseMove={handleMouse} onClick={onClick} {...extraProps}>
+      {children}
+    </Tag>
   )
 }
 
@@ -232,7 +196,7 @@ function SnakeTimeline({ items, type }) {
               <div className={`snake-track ${isLeft ? 'left' : 'right'} ${isLast ? 'last' : ''}`}>
                 <div className={`snake-node ${isCurrent ? 'now' : ''}`}/>
               </div>
-              <div className={`snake-card ${isLeft ? 'left' : 'right'}`}>
+              <GlowCard className={`snake-card ${isLeft ? 'left' : 'right'}`}>
                 {type === 'xp' ? (
                   <>
                     <div className="snake-dates">
@@ -254,7 +218,7 @@ function SnakeTimeline({ items, type }) {
                     )}
                   </>
                 )}
-              </div>
+              </GlowCard>
             </div>
           </Reveal>
         )
@@ -263,7 +227,7 @@ function SnakeTimeline({ items, type }) {
   )
 }
 
-// ─── Main App ────────────────────────────
+// ─── App ─────────────────────────────────
 export default function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -313,9 +277,7 @@ export default function App() {
         <div className="helix-dot d1"/><div className="helix-dot d2"/>
         <div className="helix-dot d3"/><div className="helix-dot d4"/>
       </div>
-      <div className="loading-text">
-        <Typer text="$ fetching orcid profile..." speed={35} delay={200}/>
-      </div>
+      <div className="loading-text"><Typer text="$ fetching orcid profile..." speed={35} delay={200}/></div>
     </div>
   )
   if (error) return (
@@ -338,26 +300,19 @@ export default function App() {
 
   return (
     <div className="portfolio">
-      {/* ═══ HERO ═══ */}
       <header className="hero">
         <div className="hero-bg"/>
-        <div className="hero-grid" style={{ transform: `translateY(${scrollY * 0.15}px)` }}/>
+        <div className="hero-grid" style={{ transform: `translateY(${scrollY * 0.12}px)` }}/>
         <DnaHelix/>
         <div className="hero-inner">
           <div className="hero-prompt">
-            <Typer text="> researcher / engineer / builder" speed={30} delay={300}/>
+            <Typer text="> researcher / engineer / builder" speed={28} delay={300}/>
           </div>
           <h1 className="hero-name">
-            <span className="hero-name-line" style={{ animationDelay: '0.5s' }}>
-              {givenName}
-            </span>
-            <span className="hero-name-line accent" style={{ animationDelay: '0.65s' }}>
-              {familyName}
-            </span>
+            <span className="hero-name-line" style={{ animationDelay: '0.4s' }}>{givenName}</span>
+            <span className="hero-name-line accent" style={{ animationDelay: '0.55s' }}>{familyName}</span>
           </h1>
-          {bio ? (
-            <p className="hero-bio">{bio}</p>
-          ) : (
+          {bio ? <p className="hero-bio">{bio}</p> : (
             <p className="hero-bio">
               <strong>Geneticist</strong> and <strong>bioinformatician</strong> building
               tools at the intersection of genomics, CRISPRi, and computational biology.
@@ -365,26 +320,16 @@ export default function App() {
           )}
           <div className="hero-stats">
             <span className="stat stat--id">
-              <a href={`https://orcid.org/${ORCID_ID}`} target="_blank" rel="noopener noreferrer">
-                ORCID {ORCID_ID}
-              </a>
+              <a href={`https://orcid.org/${ORCID_ID}`} target="_blank" rel="noopener noreferrer">ORCID {ORCID_ID}</a>
             </span>
             <span className="stat">{LINKEDIN.location}</span>
-            <span className="stat">
-              <span className="val"><CountUp target={works.length}/></span> publications
-            </span>
-            <span className="stat">
-              <span className="val"><CountUp target={LINKEDIN.experience.length}/></span> roles
-            </span>
+            <span className="stat"><span className="val"><CountUp target={works.length}/></span> publications</span>
+            <span className="stat"><span className="val"><CountUp target={LINKEDIN.experience.length}/></span> roles</span>
           </div>
-        </div>
-        <div className="scroll-cue">
-          <div className="scroll-arrow"/>
         </div>
       </header>
 
-      {/* ═══ NAV ═══ */}
-      <nav className={`nav ${scrollY > 100 ? 'nav--scrolled' : ''}`}>
+      <nav className={`nav ${scrollY > 60 ? 'nav--scrolled' : ''}`}>
         <div className="nav-inner">
           <a className="nav-a" href="#xp">Experience</a>
           <a className="nav-a" href="#edu">Education</a>
@@ -394,44 +339,35 @@ export default function App() {
         </div>
       </nav>
 
-      {/* ═══ EXPERIENCE ═══ */}
       <section className="section" id="xp">
-        <Reveal>
-          <div className="sec-head">
-            <span className="sec-label">0{++n}</span>
-            <h2 className="sec-title">Experience</h2>
-            <div className="sec-line"/>
-          </div>
-        </Reveal>
+        <Reveal><div className="sec-head">
+          <span className="sec-label">0{++n}</span>
+          <h2 className="sec-title">Experience</h2>
+          <div className="sec-line"/>
+        </div></Reveal>
         <SnakeTimeline items={LINKEDIN.experience} type="xp"/>
       </section>
 
-      {/* ═══ EDUCATION ═══ */}
       {educations.length > 0 && (
         <section className="section" id="edu">
-          <Reveal>
-            <div className="sec-head">
-              <span className="sec-label">0{++n}</span>
-              <h2 className="sec-title">Education</h2>
-              <div className="sec-line"/>
-            </div>
-          </Reveal>
+          <Reveal><div className="sec-head">
+            <span className="sec-label">0{++n}</span>
+            <h2 className="sec-title">Education</h2>
+            <div className="sec-line"/>
+          </div></Reveal>
           <SnakeTimeline items={educations} type="edu"/>
         </section>
       )}
 
-      {/* ═══ PUBLICATIONS ═══ */}
       {works.length > 0 && (
         <section className="section" id="pub">
-          <Reveal>
-            <div className="sec-head">
-              <span className="sec-label">0{++n}</span>
-              <h2 className="sec-title">Publications</h2>
-              <div className="sec-line"/>
-              <span className="sec-count">{works.length}</span>
-            </div>
-          </Reveal>
-          <div className="pub-list">
+          <Reveal><div className="sec-head">
+            <span className="sec-label">0{++n}</span>
+            <h2 className="sec-title">Publications</h2>
+            <div className="sec-line"/>
+            <span className="sec-count">{works.length}</span>
+          </div></Reveal>
+          <div className="pub-grid">
             {works.map((w, i) => {
               const title = w.title?.title?.value || 'Untitled'
               const journal = w['journal-title']?.value || ''
@@ -439,20 +375,18 @@ export default function App() {
               const year = workYear(w)
               const doi = getDoiUrl(w['external-ids'])
               return (
-                <Reveal key={i} delay={i * 50}>
-                  <div className="pub">
-                    <div className="pub-y">{year}</div>
-                    <div>
-                      <div className="pub-t">{title}</div>
-                      {journal && <div className="pub-j">{journal}</div>}
-                      {type && <div className="pub-type">{type}</div>}
+                <Reveal key={i} delay={i * 60}>
+                  <GlowCard className="pub-card" href={doi}>
+                    <div className="pub-card-top">
+                      <span className="pub-year">{year}</span>
+                      <span className="pub-type">{type}</span>
                     </div>
+                    <h3 className="pub-title">{title}</h3>
+                    {journal && <div className="pub-journal">{journal}</div>}
                     {doi && (
-                      <div className="pub-doi">
-                        <a href={doi} target="_blank" rel="noopener noreferrer" title="View"><Arrow/></a>
-                      </div>
+                      <div className="pub-arrow"><Arrow/></div>
                     )}
-                  </div>
+                  </GlowCard>
                 </Reveal>
               )
             })}
@@ -460,16 +394,13 @@ export default function App() {
         </section>
       )}
 
-      {/* ═══ SKILLS ═══ */}
       {allKeywords.length > 0 && (
         <section className="section" id="kw">
-          <Reveal>
-            <div className="sec-head">
-              <span className="sec-label">0{++n}</span>
-              <h2 className="sec-title">Research Interests &amp; Skills</h2>
-              <div className="sec-line"/>
-            </div>
-          </Reveal>
+          <Reveal><div className="sec-head">
+            <span className="sec-label">0{++n}</span>
+            <h2 className="sec-title">Research Interests &amp; Skills</h2>
+            <div className="sec-line"/>
+          </div></Reveal>
           <div className="kw-wrap">
             {allKeywords.map((k, i) => (
               <Reveal key={i} delay={i * 40} className="kw-reveal">
@@ -480,33 +411,29 @@ export default function App() {
         </section>
       )}
 
-      {/* ═══ LINKS ═══ */}
       {allLinks.length > 0 && (
         <section className="section" id="links">
-          <Reveal>
-            <div className="sec-head">
-              <span className="sec-label">0{++n}</span>
-              <h2 className="sec-title">Links</h2>
-              <div className="sec-line"/>
-            </div>
-          </Reveal>
+          <Reveal><div className="sec-head">
+            <span className="sec-label">0{++n}</span>
+            <h2 className="sec-title">Links</h2>
+            <div className="sec-line"/>
+          </div></Reveal>
           <div className="links-list">
             {allLinks.map((l, i) => (
               <Reveal key={i} delay={i * 60}>
-                <a className="lnk" href={l.url} target="_blank" rel="noopener noreferrer">
+                <GlowCard className="lnk" href={l.url}>
                   <div className="lnk-icon"><Chain/></div>
                   <div>
                     <div className="lnk-name">{l.name || 'Website'}</div>
                     <div className="lnk-url">{l.url?.replace(/^https?:\/\//, '')}</div>
                   </div>
-                </a>
+                </GlowCard>
               </Reveal>
             ))}
           </div>
         </section>
       )}
 
-      {/* ═══ FOOTER ═══ */}
       <footer className="footer">
         <div className="footer-l">
           Publications via <a href={`https://orcid.org/${ORCID_ID}`} target="_blank" rel="noopener noreferrer">ORCID</a> &middot; Experience via LinkedIn
