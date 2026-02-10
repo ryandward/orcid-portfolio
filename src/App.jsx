@@ -4,59 +4,19 @@ const ORCID_ID = '0000-0001-9537-2461'
 const API_BASE = `https://pub.orcid.org/v3.0/${ORCID_ID}`
 const HEADERS = { Accept: 'application/json' }
 
-// ─── LinkedIn data (from export) ─────────
+// ─── LinkedIn static data ────────────────
 const LINKEDIN = {
   headline: "PhD Geneticist",
-  location: "Santa Barbara, California",
+  location: "Santa Barbara, CA",
   experience: [
-    {
-      title: "Founding Scientist",
-      org: "Stealth Startup",
-      start: "Feb 2026", end: null, current: true,
-      location: null,
-    },
-    {
-      title: "Senior Scientist",
-      org: "Temporal Agriculture",
-      start: "Jan 2025", end: "Jan 2026",
-      location: "Santa Barbara, CA",
-    },
-    {
-      title: "Postdoctoral Researcher",
-      org: "University of Wisconsin–Madison",
-      start: "Dec 2024", end: "Jan 2025",
-      location: null,
-    },
-    {
-      title: "PhD Researcher",
-      org: "University of Wisconsin–Madison",
-      start: "Sep 2019", end: "Dec 2024",
-      location: null,
-    },
-    {
-      title: "Bioinformatics Intern",
-      org: "Temporal Agriculture",
-      start: "May 2024", end: "Jul 2024",
-      location: "Santa Barbara, CA",
-    },
-    {
-      title: "Emergency Department Scribe",
-      org: "MountainView Regional Medical Center",
-      start: "Mar 2017", end: "Aug 2019",
-      location: "Las Cruces, NM",
-    },
-    {
-      title: "Policy Analyst",
-      org: "New Mexico Department of Agriculture",
-      start: "Nov 2012", end: "Jan 2017",
-      location: "Las Cruces, NM",
-    },
-    {
-      title: "Intelligence Analyst",
-      org: "POSIT",
-      start: "May 2009", end: "May 2012",
-      location: "Las Cruces, NM",
-    },
+    { title: "Founding Scientist", org: "Stealth Startup", start: "Feb 2026", end: null, current: true },
+    { title: "Senior Scientist", org: "Temporal Agriculture", start: "Jan 2025", end: "Jan 2026", location: "Santa Barbara, CA" },
+    { title: "Postdoctoral Researcher", org: "University of Wisconsin\u2013Madison", start: "Dec 2024", end: "Jan 2025" },
+    { title: "PhD Researcher", org: "University of Wisconsin\u2013Madison", start: "Sep 2019", end: "Dec 2024" },
+    { title: "Bioinformatics Intern", org: "Temporal Agriculture", start: "May 2024", end: "Jul 2024", location: "Santa Barbara, CA" },
+    { title: "Emergency Department Scribe", org: "MountainView Regional Medical Center", start: "Mar 2017", end: "Aug 2019", location: "Las Cruces, NM" },
+    { title: "Policy Analyst", org: "New Mexico Department of Agriculture", start: "Nov 2012", end: "Jan 2017", location: "Las Cruces, NM" },
+    { title: "Intelligence Analyst", org: "POSIT", start: "May 2009", end: "May 2012", location: "Las Cruces, NM" },
   ],
   skills: ["Statistical Software", "Next-Generation Sequencing (NGS)", "HIPAA"],
   links: [
@@ -66,34 +26,18 @@ const LINKEDIN = {
 }
 
 // ─── Helpers ─────────────────────────────
-function fmtDate(dateObj) {
-  if (!dateObj) return null
-  const y = dateObj.year?.value
-  const m = dateObj.month?.value
-  if (!y) return null
-  if (m) {
-    const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-    return `${mo[parseInt(m) - 1]} ${y}`
-  }
-  return String(y)
+function fmtEduDate(item) {
+  // Only show the end/completion date for degrees
+  const endY = item['end-date']?.year?.value
+  if (endY) return endY
+  return 'In progress'
 }
 
-function eduDateRange(item) {
-  const start = fmtDate(item['start-date'])
-  const end = fmtDate(item['end-date'])
-  if (!start && !end) return ''
-  if (!start) return `— ${end}`
-  if (!end) return `${start} — Present`
-  return `${start} — ${end}`
+function workYear(w) {
+  return w['publication-date']?.year?.value || '\u2014'
 }
 
-function workYear(work) {
-  return work['publication-date']?.year?.value || '—'
-}
-
-function cleanType(type) {
-  return type ? type.replace(/-/g, ' ') : ''
-}
+function cleanType(t) { return t ? t.replace(/-/g, ' ') : '' }
 
 function getDoiUrl(extIds) {
   if (!extIds?.['external-id']) return null
@@ -107,34 +51,17 @@ function getDoiUrl(extIds) {
 }
 
 // ─── Icons ───────────────────────────────
-const ArrowIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-    strokeLinecap="round" strokeLinejoin="round">
-    <line x1="7" y1="17" x2="17" y2="7"/>
-    <polyline points="7 7 17 7 17 17"/>
+const Arrow = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/>
   </svg>
 )
-const LinkIconSvg = () => (
-  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
-    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const Chain = () => (
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
   </svg>
 )
-
-// ─── Section Component ───────────────────
-function Section({ id, num, title, count, children }) {
-  return (
-    <section className="section" id={id}>
-      <div className="section-head">
-        <span className="section-num">{num}.</span>
-        <h2 className="section-title">{title}</h2>
-        {count != null && <span className="section-count">{count}</span>}
-      </div>
-      {children}
-    </section>
-  )
-}
 
 // ─── App ─────────────────────────────────
 export default function App() {
@@ -145,234 +72,233 @@ export default function App() {
   const [educations, setEducations] = useState([])
 
   async function fetchData() {
-    setLoading(true)
-    setError(null)
+    setLoading(true); setError(null)
     try {
-      const [personRes, worksRes, educationsRes] = await Promise.all([
+      const [pRes, wRes, eRes] = await Promise.all([
         fetch(`${API_BASE}/person`, { headers: HEADERS }),
         fetch(`${API_BASE}/works`, { headers: HEADERS }),
         fetch(`${API_BASE}/educations`, { headers: HEADERS }),
       ])
-      if (!personRes.ok) throw new Error('Failed to fetch ORCID data')
+      if (!pRes.ok) throw new Error('ORCID API returned ' + pRes.status)
+      setPerson(await pRes.json())
 
-      const personData = await personRes.json()
-      const worksData = await worksRes.json()
-      const educationsData = await educationsRes.json()
+      const wd = await wRes.json()
+      setWorks(
+        (wd.group || [])
+          .map(g => g['work-summary']?.[0]).filter(Boolean)
+          .sort((a, b) => (parseInt(workYear(b)) || 0) - (parseInt(workYear(a)) || 0))
+      )
 
-      setPerson(personData)
-
-      // Works: flatten, sort by year desc
-      const allWorks = (worksData.group || [])
-        .map(g => g['work-summary']?.[0])
-        .filter(Boolean)
-        .sort((a, b) => (parseInt(workYear(b)) || 0) - (parseInt(workYear(a)) || 0))
-      setWorks(allWorks)
-
-      // Education
-      const eduGroups = educationsData['affiliation-group'] || []
-      const edus = eduGroups
-        .map(g => g.summaries?.[0]?.['education-summary'])
-        .filter(Boolean)
-        .sort((a, b) =>
-          (parseInt(b['start-date']?.year?.value) || 0) -
-          (parseInt(a['start-date']?.year?.value) || 0)
-        )
-      setEducations(edus)
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
+      const ed = await eRes.json()
+      setEducations(
+        (ed['affiliation-group'] || [])
+          .map(g => g.summaries?.[0]?.['education-summary']).filter(Boolean)
+          .sort((a, b) =>
+            (parseInt(b['end-date']?.year?.value || b['start-date']?.year?.value) || 0) -
+            (parseInt(a['end-date']?.year?.value || a['start-date']?.year?.value) || 0)
+          )
+      )
+    } catch (err) { setError(err.message) }
+    finally { setLoading(false) }
   }
 
   useEffect(() => { fetchData() }, [])
 
-  if (loading) {
-    return (
-      <div className="loading-screen">
-        <div className="loading-spinner"/>
-        <div className="loading-text">Fetching ORCID profile…</div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="error-screen">
-        <h2>Connection Error</h2>
-        <p>{error}</p>
-        <button className="retry-btn" onClick={fetchData}>Retry</button>
-      </div>
-    )
-  }
-
-  const name = person?.name
-  const givenName = name?.['given-names']?.value || ''
-  const familyName = name?.['family-name']?.value || ''
-  const bio = person?.biography?.content || ''
-  const keywords = (person?.keywords?.keyword || []).map(k => k.content)
-  const orcidUrls = (person?.['researcher-urls']?.['researcher-url'] || []).map(
-    u => ({ name: u['url-name'], url: u.url?.value })
+  if (loading) return (
+    <div className="loading-screen">
+      <div className="loading-spinner"/>
+      <div className="loading-text">$ curl pub.orcid.org ...</div>
+    </div>
+  )
+  if (error) return (
+    <div className="error-screen">
+      <h2>Connection Failed</h2><p>{error}</p>
+      <button className="retry-btn" onClick={fetchData}>Retry</button>
+    </div>
   )
 
-  // Merge links: LinkedIn links + ORCID researcher-urls, deduplicated
-  const allLinks = [...LINKEDIN.links]
-  orcidUrls.forEach(ou => {
-    if (!allLinks.some(l => l.url === ou.url)) allLinks.push(ou)
-  })
+  const givenName = person?.name?.['given-names']?.value || ''
+  const familyName = person?.name?.['family-name']?.value || ''
+  const bio = person?.biography?.content || ''
+  const keywords = (person?.keywords?.keyword || []).map(k => k.content)
+  const orcidUrls = (person?.['researcher-urls']?.['researcher-url'] || [])
+    .map(u => ({ name: u['url-name'], url: u.url?.value }))
 
-  // Merge skills: LinkedIn skills + ORCID keywords, deduplicated
+  const allLinks = [...LINKEDIN.links]
+  orcidUrls.forEach(u => { if (!allLinks.some(l => l.url === u.url)) allLinks.push(u) })
   const allKeywords = [...new Set([...keywords, ...LINKEDIN.skills])]
 
-  let secNum = 0
-
-  // Group experience by org for visual clarity
-  const experience = LINKEDIN.experience
+  let n = 0
 
   return (
     <div className="portfolio">
       {/* ═══ HERO ═══ */}
       <header className="hero">
+        <div className="hero-bg"/>
+        <div className="hero-grid"/>
         <div className="hero-inner">
-          <div className="hero-eyebrow">{LINKEDIN.headline}</div>
+          <div className="hero-prompt">researcher / engineer / builder</div>
           <h1 className="hero-name">
-            {givenName} <em>{familyName}</em>
+            {givenName}<br/><span className="g">{familyName}</span>
           </h1>
-          {bio && <p className="hero-bio">{bio}</p>}
-          <div className="hero-chips">
-            <span className="chip chip--accent">
-              <span className="orcid-icon">iD</span>
+          {bio ? (
+            <p className="hero-tagline">{bio}</p>
+          ) : (
+            <p className="hero-tagline">
+              <strong>Geneticist</strong> and <strong>bioinformatician</strong> building
+              tools at the intersection of genomics, CRISPRi, and computational biology.
+            </p>
+          )}
+          <div className="hero-stats">
+            <span className="stat stat--id">
               <a href={`https://orcid.org/${ORCID_ID}`} target="_blank" rel="noopener noreferrer">
-                {ORCID_ID}
+                ORCID {ORCID_ID}
               </a>
             </span>
-            <span className="chip">{LINKEDIN.location}</span>
-            <span className="chip">{works.length} publications</span>
+            <span className="stat">{LINKEDIN.location}</span>
+            <span className="stat"><span className="val">{works.length}</span> publications</span>
+            <span className="stat"><span className="val">{LINKEDIN.experience.length}</span> roles</span>
           </div>
         </div>
       </header>
 
       {/* ═══ NAV ═══ */}
-      <nav className="nav-strip">
+      <nav className="nav">
         <div className="nav-inner">
-          <a className="nav-link" href="#experience">Experience</a>
-          <a className="nav-link" href="#education">Education</a>
-          <a className="nav-link" href="#publications">Publications</a>
-          {allKeywords.length > 0 && <a className="nav-link" href="#interests">Interests</a>}
-          {allLinks.length > 0 && <a className="nav-link" href="#links">Links</a>}
+          <a className="nav-a" href="#xp">Experience</a>
+          <a className="nav-a" href="#edu">Education</a>
+          <a className="nav-a" href="#pub">Publications</a>
+          {allKeywords.length > 0 && <a className="nav-a" href="#kw">Skills</a>}
+          {allLinks.length > 0 && <a className="nav-a" href="#links">Links</a>}
         </div>
       </nav>
 
-      {/* ═══ EXPERIENCE (LinkedIn) ═══ */}
-      <Section id="experience" num={`0${++secNum}`} title="Experience" count={`${experience.length} roles`}>
+      {/* ═══ EXPERIENCE ═══ */}
+      <section className="section" id="xp">
+        <div className="sec-head">
+          <span className="sec-label">0{++n}</span>
+          <h2 className="sec-title">Experience</h2>
+          <div className="sec-line"/>
+        </div>
         <div className="timeline">
-          {experience.map((job, i) => (
-            <div className={`timeline-item ${job.current ? 'current' : ''}`} key={i}>
-              <div className="timeline-dot"/>
-              <div className="timeline-dates">
-                {job.start} — {job.end || 'Present'}
-                {job.location && <span style={{marginLeft: '0.75rem', opacity: 0.6}}>{job.location}</span>}
+          {LINKEDIN.experience.map((j, i) => (
+            <div className={`tl-item ${j.current ? 'now' : ''}`} key={i}>
+              <div className="tl-dot"/>
+              <div className="tl-dates">
+                {j.start} &mdash; {j.end || 'Present'}
+                {j.location && <span className="loc">{j.location}</span>}
               </div>
-              <div className="timeline-role">{job.title}</div>
-              <div className="timeline-org">{job.org}</div>
+              <div className="tl-role">{j.title}</div>
+              <div className="tl-org">{j.org}</div>
             </div>
           ))}
         </div>
-      </Section>
+      </section>
 
-      {/* ═══ EDUCATION (ORCID) ═══ */}
+      {/* ═══ EDUCATION ═══ */}
       {educations.length > 0 && (
-        <Section id="education" num={`0${++secNum}`} title="Education">
+        <section className="section" id="edu">
+          <div className="sec-head">
+            <span className="sec-label">0{++n}</span>
+            <h2 className="sec-title">Education</h2>
+            <div className="sec-line"/>
+          </div>
           <div className="timeline">
             {educations.map((edu, i) => (
-              <div className={`timeline-item ${!edu['end-date']?.year?.value ? 'current' : ''}`} key={i}>
-                <div className="timeline-dot"/>
-                <div className="timeline-dates">{eduDateRange(edu)}</div>
-                <div className="timeline-role">
+              <div className="tl-item" key={i}>
+                <div className="tl-dot"/>
+                <div className="tl-dates">{fmtEduDate(edu)}</div>
+                <div className="tl-role">
                   {edu['role-title'] || edu['department-name'] || 'Student'}
                 </div>
-                <div className="timeline-org">{edu.organization?.name}</div>
+                <div className="tl-org">{edu.organization?.name}</div>
                 {edu['role-title'] && edu['department-name'] && (
-                  <div className="timeline-dept">{edu['department-name']}</div>
+                  <div className="tl-dept">{edu['department-name']}</div>
                 )}
               </div>
             ))}
           </div>
-        </Section>
+        </section>
       )}
 
-      {/* ═══ PUBLICATIONS (ORCID) ═══ */}
+      {/* ═══ PUBLICATIONS ═══ */}
       {works.length > 0 && (
-        <Section id="publications" num={`0${++secNum}`} title="Publications" count={`${works.length} works`}>
+        <section className="section" id="pub">
+          <div className="sec-head">
+            <span className="sec-label">0{++n}</span>
+            <h2 className="sec-title">Publications</h2>
+            <div className="sec-line"/>
+            <span className="sec-count">{works.length}</span>
+          </div>
           <div className="pub-list">
-            {works.map((work, i) => {
-              const title = work.title?.title?.value || 'Untitled'
-              const journal = work['journal-title']?.value || ''
-              const type = cleanType(work.type)
-              const year = workYear(work)
-              const doiUrl = getDoiUrl(work['external-ids'])
+            {works.map((w, i) => {
+              const title = w.title?.title?.value || 'Untitled'
+              const journal = w['journal-title']?.value || ''
+              const type = cleanType(w.type)
+              const year = workYear(w)
+              const doi = getDoiUrl(w['external-ids'])
               return (
-                <div className="pub-item" key={i}>
-                  <div className="pub-year">{year}</div>
+                <div className="pub" key={i}>
+                  <div className="pub-y">{year}</div>
                   <div>
-                    <div className="pub-title">{title}</div>
-                    {journal && <div className="pub-journal">{journal}</div>}
+                    <div className="pub-t">{title}</div>
+                    {journal && <div className="pub-j">{journal}</div>}
                     {type && <div className="pub-type">{type}</div>}
                   </div>
-                  {doiUrl && (
-                    <div className="pub-link">
-                      <a href={doiUrl} target="_blank" rel="noopener noreferrer" title="View publication">
-                        <ArrowIcon/>
-                      </a>
+                  {doi && (
+                    <div className="pub-doi">
+                      <a href={doi} target="_blank" rel="noopener noreferrer" title="View"><Arrow/></a>
                     </div>
                   )}
                 </div>
               )
             })}
           </div>
-        </Section>
+        </section>
       )}
 
-      {/* ═══ KEYWORDS / INTERESTS ═══ */}
+      {/* ═══ SKILLS ═══ */}
       {allKeywords.length > 0 && (
-        <Section id="interests" num={`0${++secNum}`} title="Research Interests &amp; Skills">
-          <div className="keywords-wrap">
-            {allKeywords.map((kw, i) => (
-              <span className="kw" key={i}>{kw}</span>
-            ))}
+        <section className="section" id="kw">
+          <div className="sec-head">
+            <span className="sec-label">0{++n}</span>
+            <h2 className="sec-title">Research Interests &amp; Skills</h2>
+            <div className="sec-line"/>
           </div>
-        </Section>
+          <div className="kw-wrap">
+            {allKeywords.map((k, i) => <span className="kw" key={i}>{k}</span>)}
+          </div>
+        </section>
       )}
 
       {/* ═══ LINKS ═══ */}
       {allLinks.length > 0 && (
-        <Section id="links" num={`0${++secNum}`} title="Links">
+        <section className="section" id="links">
+          <div className="sec-head">
+            <span className="sec-label">0{++n}</span>
+            <h2 className="sec-title">Links</h2>
+            <div className="sec-line"/>
+          </div>
           <div className="links-list">
-            {allLinks.map((link, i) => (
-              <a className="link-row" href={link.url} target="_blank" rel="noopener noreferrer" key={i}>
-                <div className="link-row-icon"><LinkIconSvg/></div>
+            {allLinks.map((l, i) => (
+              <a className="lnk" href={l.url} target="_blank" rel="noopener noreferrer" key={i}>
+                <div className="lnk-icon"><Chain/></div>
                 <div>
-                  <div className="link-row-name">{link.name || 'Website'}</div>
-                  <div className="link-row-url">{link.url?.replace(/^https?:\/\//, '')}</div>
+                  <div className="lnk-name">{l.name || 'Website'}</div>
+                  <div className="lnk-url">{l.url?.replace(/^https?:\/\//, '')}</div>
                 </div>
               </a>
             ))}
           </div>
-        </Section>
+        </section>
       )}
 
       {/* ═══ FOOTER ═══ */}
       <footer className="footer">
-        <div className="footer-left">
-          Publications via{' '}
-          <a href={`https://orcid.org/${ORCID_ID}`} target="_blank" rel="noopener noreferrer">
-            ORCID
-          </a>
-          {' '}· Experience via LinkedIn export
+        <div className="footer-l">
+          Publications via <a href={`https://orcid.org/${ORCID_ID}`} target="_blank" rel="noopener noreferrer">ORCID</a> &middot; Experience via LinkedIn
         </div>
-        <div className="footer-right">
-          Auto-updates publications when you update ORCID
-        </div>
+        <div className="footer-r">auto-refreshes on every visit</div>
       </footer>
     </div>
   )
