@@ -57,7 +57,7 @@ export default function App() {
     if (!isTouch) return
 
     function handleClick(e) {
-      const el = e.target.closest('.snake-card, .pub-card, .se-card, .kw, .lnk, .nav-a')
+      const el = e.target.closest('.snake-card, .pub-card, .se-card, .kw, .lnk')
       document.querySelectorAll('.th').forEach(node => {
         if (node !== el) node.classList.remove('th')
       })
