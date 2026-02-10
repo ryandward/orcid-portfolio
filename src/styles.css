@@ -603,7 +603,7 @@ body.detail-1 .reveal.visible { transform: none; }
 /* Nav becomes plain underlined links */
 body.detail-1 .nav {
   background: #fff; backdrop-filter: none;
-  border-bottom: 1px solid #000; position: static;
+  border-bottom: 1px solid #000;
 }
 body.detail-1 .nav-a {
   color: #00e; text-decoration: underline;
