@@ -218,28 +218,28 @@ export default function App() {
             <span className="sec-count">{works.length}</span>
           </div></Reveal>
           <div className="pub-grid">
-            {works.map((w, i) => {
-              const title = w.title?.title?.value || 'Untitled'
-              const journal = w['journal-title']?.value || ''
-              const type = cleanType(w.type)
-              const year = workYear(w)
-              const doi = getDoiUrl(w['external-ids'])
-              return (
-                <Reveal key={i} delay={i * 60}>
-                  <GlowCard className="pub-card" href={doi}>
-                    <div className="pub-card-top">
-                      <span className="pub-year">{year}</span>
-                      <span className="pub-type">{type}</span>
-                    </div>
-                    <h3 className="pub-title">{title}</h3>
-                    {journal && <div className="pub-journal">{journal}</div>}
-                    {doi && (
-                      <div className="pub-arrow"><Arrow/></div>
-                    )}
-                  </GlowCard>
-                </Reveal>
-              )
-            })}
+              {works.map((w, i) => {
+                const title = w.title?.title?.value || 'Untitled'
+                const journal = w['journal-title']?.value || ''
+                const type = cleanType(w.type)
+                const year = workYear(w)
+                const doi = getDoiUrl(w['external-ids'])
+                return (
+                  <Reveal key={i} delay={i * 60}>
+                    <GlowCard className="pub-card" href={doi}>
+                      <div className="pub-card-top">
+                        <span className="pub-year">{year}</span>
+                        <span className="pub-type">{type}</span>
+                      </div>
+                      <h3 className="pub-title">{title}</h3>
+                      {journal && <div className="pub-journal">{journal}</div>}
+                      {doi && (
+                        <div className="pub-arrow"><Arrow/></div>
+                      )}
+                    </GlowCard>
+                  </Reveal>
+                )
+              })}
           </div>
         </section>
       )}
@@ -280,17 +280,17 @@ export default function App() {
             <div className="sec-line"/>
           </div></Reveal>
           <div className="links-list">
-            {allLinks.map((l, i) => (
-              <Reveal key={i} delay={i * 60}>
-                <GlowCard className="lnk" href={l.url}>
-                  <div className="lnk-icon"><Chain/></div>
-                  <div>
-                    <div className="lnk-name">{l.name || 'Website'}</div>
-                    <div className="lnk-url">{l.url?.replace(/^https?:\/\//, '')}</div>
-                  </div>
-                </GlowCard>
-              </Reveal>
-            ))}
+              {allLinks.map((l, i) => (
+                <Reveal key={i} delay={i * 60}>
+                  <GlowCard className="lnk" href={l.url}>
+                    <div className="lnk-icon"><Chain/></div>
+                    <div>
+                      <div className="lnk-name">{l.name || 'Website'}</div>
+                      <div className="lnk-url">{l.url?.replace(/^https?:\/\//, '')}</div>
+                    </div>
+                  </GlowCard>
+                </Reveal>
+              ))}
           </div>
         </section>
       )}
