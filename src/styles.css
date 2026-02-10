@@ -327,6 +327,10 @@ body {
   font-size: 0.75rem; color: var(--cyan); font-style: italic;
   position: relative; z-index: 1;
 }
+.pub-lab {
+  font-size: 0.6rem; color: var(--text-dim); letter-spacing: 0.04em;
+  position: relative; z-index: 1;
+}
 .pub-arrow {
   position: absolute; bottom: 1rem; right: 1rem;
   width: 28px; height: 28px;

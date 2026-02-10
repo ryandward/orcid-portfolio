@@ -99,10 +99,24 @@ export default function App() {
       if (!pRes.ok) throw new Error('ORCID API returned ' + pRes.status)
       setPerson(await pRes.json())
       const wd = await wRes.json()
-      setWorks(
-        (wd.group || []).map(g => g['work-summary']?.[0]).filter(Boolean)
-          .sort((a, b) => (parseInt(workYear(b)) || 0) - (parseInt(workYear(a)) || 0))
-      )
+      const summaries = (wd.group || []).map(g => g['work-summary']?.[0]).filter(Boolean)
+        .sort((a, b) => (parseInt(workYear(b)) || 0) - (parseInt(workYear(a)) || 0))
+      const withLabs = await Promise.all(summaries.map(async w => {
+        try {
+          const full = await fetch(`${API_BASE}/work/${w['put-code']}`, { headers: HEADERS }).then(r => r.json())
+          const contribs = (full?.contributors?.contributor || [])
+            .filter(c => !c['contributor-attributes']?.['contributor-role'] || c['contributor-attributes']['contributor-role'] === 'author')
+          if (contribs.length > 0) {
+            const last = contribs[contribs.length - 1]?.['credit-name']?.value
+            if (last) {
+              const surname = last.split(' ').pop().replace(/,$/, '')
+              return { ...w, labName: `${surname} Lab` }
+            }
+          }
+        } catch {}
+        return w
+      }))
+      setWorks(withLabs)
       const ed = await eRes.json()
       setEducations(
         (ed['affiliation-group'] || []).map(g => g.summaries?.[0]?.['education-summary']).filter(Boolean)
@@ -233,6 +247,7 @@ export default function App() {
                       </div>
                       <h3 className="pub-title">{title}</h3>
                       {journal && <div className="pub-journal">{journal}</div>}
+                      {w.labName && <div className="pub-lab">{w.labName}</div>}
                       {doi && (
                         <div className="pub-arrow"><Arrow/></div>
                       )}
