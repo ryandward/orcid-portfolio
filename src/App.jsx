@@ -44,7 +44,7 @@ export default function App() {
   const didMount = useRef(false)
   useEffect(() => {
     if (!didMount.current) { didMount.current = true; return }
-    const labels = { 1: 'css: unloaded', 2: 'detail: normal', 3: 'DETAIL: MAXIMUM OVERDRIVE' }
+    const labels = { 1: 'css: unloaded', 2: 'detail: normal', 3: 'EDITORIAL MODE' }
     setToast(labels[detailLevel])
     const id = setTimeout(() => setToast(null), 1500)
     return () => clearTimeout(id)
