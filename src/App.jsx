@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ORCID_ID, API_BASE, HEADERS, LINKEDIN } from './constants'
+import { ORCID_ID, API_BASE, HEADERS, LINKEDIN, SE_USER_ID, SE_API, SE_KEY } from './constants'
 import { workYear, cleanType, getDoiUrl } from './utils'
 import { Arrow, Chain } from './components/Icons'
 import CountUp from './components/CountUp'
@@ -8,6 +8,7 @@ import DnaHelix from './components/DnaHelix'
 import Reveal from './components/Reveal'
 import GlowCard from './components/GlowCard'
 import SnakeTimeline from './components/SnakeTimeline'
+import StackExchangeSection from './components/StackExchangeSection'
 
 export default function App() {
   const [loading, setLoading] = useState(true)
@@ -15,6 +16,7 @@ export default function App() {
   const [person, setPerson] = useState(null)
   const [works, setWorks] = useState([])
   const [educations, setEducations] = useState([])
+  const [seData, setSeData] = useState([])
   const [scrollY, setScrollY] = useState(0)
 
   useEffect(() => {
@@ -23,13 +25,76 @@ export default function App() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  const SE_CACHE_KEY = 'se_cache_v3'
+  const SE_CACHE_TTL = 60 * 60 * 1000 // 1 hour
+
+  async function fetchStackExchange() {
+    try {
+      const cached = localStorage.getItem(SE_CACHE_KEY)
+      if (cached) {
+        const { data, ts } = JSON.parse(cached)
+        if (Date.now() - ts < SE_CACHE_TTL && data.length > 0) return data
+      }
+    } catch {}
+
+    try {
+      const soRes = await fetch(`${SE_API}/users/${SE_USER_ID}?site=stackoverflow&key=${SE_KEY}`)
+      const soData = await soRes.json()
+      const accountId = soData.items?.[0]?.account_id
+      if (!accountId) return []
+
+      const assocRes = await fetch(`${SE_API}/users/${accountId}/associated?pagesize=100&key=${SE_KEY}`)
+      const assocData = await assocRes.json()
+
+      const activeSites = (assocData.items || []).filter(s => s.reputation >= 500)
+
+      const siteData = await Promise.all(activeSites.map(async site => {
+        const hostname = new URL(site.site_url).hostname
+        const apiName = hostname.split('.')[0]
+        const [qRes, aRes] = await Promise.all([
+          fetch(`${SE_API}/users/${site.user_id}/questions?order=desc&sort=votes&site=${apiName}&pagesize=5&key=${SE_KEY}`).then(r => r.json()),
+          fetch(`${SE_API}/users/${site.user_id}/answers?order=desc&sort=votes&site=${apiName}&pagesize=3&key=${SE_KEY}`).then(r => r.json()),
+        ])
+
+        const answers = aRes.items || []
+        let answersWithTitles = answers
+        if (answers.length > 0) {
+          const qIds = answers.map(a => a.question_id).join(';')
+          const qtRes = await fetch(`${SE_API}/questions/${qIds}?site=${apiName}&key=${SE_KEY}`).then(r => r.json())
+          const titleMap = {}
+          for (const q of (qtRes.items || [])) titleMap[q.question_id] = q.title
+          answersWithTitles = answers.map(a => ({ ...a, question_title: titleMap[a.question_id] || null }))
+        }
+
+        const filteredQ = (qRes.items || []).filter(q => q.score >= 10)
+        const filteredA = answersWithTitles.filter(a => a.score >= 5)
+        return { ...site, questions: filteredQ, answers: filteredA }
+      }))
+
+      const result = siteData
+        .filter(s => s.questions.length > 0 || s.answers.length > 0)
+        .sort((a, b) => {
+          const scoreA = [...a.questions, ...a.answers].reduce((s, x) => s + (x.score || 0), 0)
+          const scoreB = [...b.questions, ...b.answers].reduce((s, x) => s + (x.score || 0), 0)
+          return scoreB - scoreA
+        })
+
+      try { localStorage.setItem(SE_CACHE_KEY, JSON.stringify({ data: result, ts: Date.now() })) } catch {}
+      return result
+    } catch (err) {
+      console.warn('Stack Exchange fetch failed:', err)
+      return []
+    }
+  }
+
   async function fetchData() {
     setLoading(true); setError(null)
     try {
-      const [pRes, wRes, eRes] = await Promise.all([
+      const [pRes, wRes, eRes, seResult] = await Promise.all([
         fetch(`${API_BASE}/person`, { headers: HEADERS }),
         fetch(`${API_BASE}/works`, { headers: HEADERS }),
         fetch(`${API_BASE}/educations`, { headers: HEADERS }),
+        fetchStackExchange(),
       ])
       if (!pRes.ok) throw new Error('ORCID API returned ' + pRes.status)
       setPerson(await pRes.json())
@@ -46,6 +111,7 @@ export default function App() {
             (parseInt(a['end-date']?.year?.value || a['start-date']?.year?.value) || 0)
           )
       )
+      setSeData(seResult)
     } catch (err) { setError(err.message) }
     finally { setLoading(false) }
   }
@@ -95,8 +161,10 @@ export default function App() {
           </h1>
           {bio ? <p className="hero-bio">{bio}</p> : (
             <p className="hero-bio">
-              <strong>Geneticist</strong> and <strong>bioinformatician</strong> building
-              tools at the intersection of genomics, CRISPRi, and computational biology.
+              <strong>Geneticist</strong> and <strong>computational biologist</strong> who
+              builds tools for people who don't know what GitHub is. CRISPRi pipelines
+              for a lab that needed them yesterday. A fair loot system for 479 EverQuest
+              players who just want their dragon drops. Zero GitHub stars. Lots of users.
             </p>
           )}
           <div className="hero-stats">
@@ -115,6 +183,7 @@ export default function App() {
           <a className="nav-a" href="#xp">Experience</a>
           <a className="nav-a" href="#edu">Education</a>
           <a className="nav-a" href="#pub">Publications</a>
+          {seData.length > 0 && <a className="nav-a" href="#se">Stack Exchange</a>}
           {allKeywords.length > 0 && <a className="nav-a" href="#kw">Skills</a>}
           {allLinks.length > 0 && <a className="nav-a" href="#links">Links</a>}
         </div>
@@ -175,6 +244,17 @@ export default function App() {
         </section>
       )}
 
+      {seData.length > 0 && (
+        <section className="section" id="se">
+          <Reveal><div className="sec-head">
+            <span className="sec-label">0{++n}</span>
+            <h2 className="sec-title">Stack Exchange</h2>
+            <div className="sec-line"/>
+          </div></Reveal>
+          <StackExchangeSection seData={seData}/>
+        </section>
+      )}
+
       {allKeywords.length > 0 && (
         <section className="section" id="kw">
           <Reveal><div className="sec-head">
@@ -217,7 +297,7 @@ export default function App() {
 
       <footer className="footer">
         <div className="footer-l">
-          Publications via <a href={`https://orcid.org/${ORCID_ID}`} target="_blank" rel="noopener noreferrer">ORCID</a> &middot; Experience via LinkedIn
+          Publications via <a href={`https://orcid.org/${ORCID_ID}`} target="_blank" rel="noopener noreferrer">ORCID</a> &middot; Q&amp;A via <a href={`https://stackoverflow.com/users/${SE_USER_ID}`} target="_blank" rel="noopener noreferrer">Stack Exchange</a> &middot; Experience via LinkedIn
         </div>
         <div className="footer-r">auto-refreshes on every visit</div>
       </footer>

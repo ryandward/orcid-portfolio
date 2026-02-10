@@ -2,6 +2,10 @@ export const ORCID_ID = '0000-0001-9537-2461'
 export const API_BASE = `https://pub.orcid.org/v3.0/${ORCID_ID}`
 export const HEADERS = { Accept: 'application/json' }
 
+export const SE_USER_ID = 714178
+export const SE_API = 'https://api.stackexchange.com/2.3'
+export const SE_KEY = 'rl_wccxWRWHzAJvKRriRy1tCvccy'
+
 export const LINKEDIN = {
   headline: "PhD Geneticist",
   location: "Santa Barbara, CA",
@@ -13,7 +17,7 @@ export const LINKEDIN = {
     { title: "Bioinformatics Intern", org: "Temporal Agriculture", start: "May 2024", end: "Jul 2024", location: "Santa Barbara, CA" },
     { title: "Emergency Department Scribe", org: "MountainView Regional Medical Center", start: "Mar 2017", end: "Aug 2019", location: "Las Cruces, NM" },
     { title: "Policy Analyst", org: "New Mexico Department of Agriculture", start: "Nov 2012", end: "Jan 2017", location: "Las Cruces, NM" },
-    { title: "Intelligence Analyst", org: "POSIT", start: "May 2009", end: "May 2012", location: "Las Cruces, NM" },
+    { title: "Intelligence Analyst", org: "PREDICT Open Source Intelligence Team", start: "May 2009", end: "May 2012", location: "Las Cruces, NM" },
   ],
   skills: [
     "CRISPRi & Functional Genomics",
@@ -27,6 +31,8 @@ export const LINKEDIN = {
   ],
   links: [
     { name: "LinkedIn", url: "https://www.linkedin.com/in/ryanw-346889253" },
+    { name: "Discord: sambal.oelek", url: "https://discord.com/users/sambal.oelek" },
+    { name: "GitHub", url: "https://github.com/ryandward" },
     { name: "Stack Overflow", url: "https://stackoverflow.com/users/714178" },
   ],
 }

@@ -17,7 +17,7 @@ export default function DnaHelix() {
     function draw() {
       const w = canvas.offsetWidth, h = canvas.offsetHeight
       ctx.clearRect(0, 0, w, h)
-      const points = 50, amplitude = w * 0.1, centerX = w * 0.85, spacing = h / points
+      const points = 50, amplitude = Math.min(w * 0.1, 90), centerX = Math.min(w * 0.85, w - 120), spacing = h / points
       for (let i = 0; i < points; i++) {
         const y = i * spacing, phase = (i * 0.18) + t
         const x1 = centerX + Math.sin(phase) * amplitude
