@@ -69,13 +69,19 @@ export default function useProximityGlow(active, selector = '.glow-card, .kw') {
           card.style.setProperty('--prox-x', `${nx}%`)
           card.style.setProperty('--prox-y', `${ny}%`)
 
-          // Proximity-driven border and shadow — subtle, not a spotlight
-          const cyanAlpha = (intensity * 0.10).toFixed(3)
-          const shadowSpread = (intensity * 12).toFixed(1)
-          const shadowSpread2 = (intensity * 20).toFixed(1)
+          // Don't set inline shadow/border on hovered cards — let CSS
+          // bioBreatheCyan/bioBreatheGreen animations take over
+          if (!card.matches(':hover, .th')) {
+            const cyanAlpha = (intensity * 0.10).toFixed(3)
+            const shadowSpread = (intensity * 12).toFixed(1)
+            const shadowSpread2 = (intensity * 20).toFixed(1)
 
-          card.style.borderColor = `rgba(0,212,255,${cyanAlpha})`
-          card.style.boxShadow = `0 0 ${shadowSpread}px rgba(0,212,255,${(intensity * 0.03).toFixed(3)}), 0 0 ${shadowSpread2}px rgba(0,255,136,${(intensity * 0.015).toFixed(3)})`
+            card.style.borderColor = `rgba(0,212,255,${cyanAlpha})`
+            card.style.boxShadow = `0 0 ${shadowSpread}px rgba(0,212,255,${(intensity * 0.03).toFixed(3)}), 0 0 ${shadowSpread2}px rgba(0,255,136,${(intensity * 0.015).toFixed(3)})`
+          } else {
+            card.style.borderColor = ''
+            card.style.boxShadow = ''
+          }
         } else {
           card.style.setProperty('--prox', '0')
           card.style.borderColor = ''
