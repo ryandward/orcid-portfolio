@@ -1292,8 +1292,8 @@ body.detail-4 .nav-lvl.active {
 /* Sections — no decorative headers on level 4, charts handle their own padding */
 body.detail-4 .section {
   max-width: 880px;
-  padding-left: 0;
-  padding-right: 0;
+  padding-left: 2rem;
+  padding-right: 2rem;
 }
 
 /* Footer */
