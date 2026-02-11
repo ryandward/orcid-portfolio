@@ -271,6 +271,20 @@ export default function App() {
           for jittery, non-interpolated pattern changes. */}
       <svg style={{ position: 'absolute', width: 0, height: 0 }} aria-hidden="true">
         <defs>
+          <filter id="cloud-turbulence">
+            <feTurbulence type="fractalNoise" baseFrequency=".01" numOctaves="6" seed="2" />
+            <feDisplacementMap in="SourceGraphic" scale="170" />
+          </filter>
+          <filter id="crt-noise-lg" x="-5%" y="-5%" width="110%" height="110%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.015 0.8"
+              numOctaves="3" result="noise">
+              <animate attributeName="seed"
+                values="0;1;2;3;4;5;6;7;8;9;10;11"
+                dur="1s" calcMode="discrete" repeatCount="indefinite"/>
+            </feTurbulence>
+            <feDisplacementMap in="SourceGraphic" in2="noise"
+              scale="4" xChannelSelector="R" yChannelSelector="G"/>
+          </filter>
           <filter id="crt-noise" x="-5%" y="-5%" width="110%" height="110%">
             <feTurbulence type="fractalNoise" baseFrequency="0.015 0.8"
               numOctaves="3" result="noise">

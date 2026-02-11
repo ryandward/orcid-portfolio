@@ -715,6 +715,56 @@ body.detail-1 .detail-toast {
 body.detail-1::-webkit-scrollbar-track { background: #fff; }
 body.detail-1::-webkit-scrollbar-thumb { background: #ccc; }
 
+/* ═══ LEVEL 1: CSS CLOUDS ═══ */
+.cloud-sky {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, #6ca0dc 0%, #b0d4f1 60%, #e8f0f8 100%);
+  overflow: hidden;
+}
+
+.cloud-circle {
+  width: 500px;
+  height: 275px;
+  border-radius: 50%;
+  filter: url(#cloud-turbulence);
+  position: absolute;
+}
+
+.cloud-1 {
+  top: -320px; left: -250px;
+  box-shadow: 380px 400px 60px 0 rgba(255,255,255,0.9);
+  animation: cloud-drift-1 180s ease-in-out infinite alternate;
+}
+.cloud-2 {
+  top: -340px; left: 200px;
+  box-shadow: 400px 390px 80px 0 rgba(255,255,255,0.8);
+  animation: cloud-drift-2 150s ease-in-out infinite alternate;
+}
+.cloud-3 {
+  top: -300px; right: -100px;
+  box-shadow: -300px 360px 50px 0 rgba(255,255,255,0.85);
+  animation: cloud-drift-3 200s ease-in-out infinite alternate;
+}
+.cloud-4 {
+  top: -310px; left: 50%;
+  box-shadow: -100px 370px 70px 0 rgba(255,255,255,0.7);
+  animation: cloud-drift-4 170s ease-in-out infinite alternate;
+}
+.cloud-5 {
+  top: -330px; right: -200px;
+  box-shadow: -150px 400px 60px 0 rgba(255,255,255,0.75);
+  animation: cloud-drift-5 190s ease-in-out infinite alternate;
+}
+
+@keyframes cloud-drift-1 { from { transform: translateZ(0) translateX(0); }   to { transform: translateZ(0) translateX(25px); } }
+@keyframes cloud-drift-2 { from { transform: translateZ(0) translateX(0); }   to { transform: translateZ(0) translateX(-20px); } }
+@keyframes cloud-drift-3 { from { transform: translateZ(0) translateX(0); }   to { transform: translateZ(0) translateX(15px); } }
+@keyframes cloud-drift-4 { from { transform: translateZ(0) translateX(0); }   to { transform: translateZ(0) translateX(-30px); } }
+@keyframes cloud-drift-5 { from { transform: translateZ(0) translateX(0); }   to { transform: translateZ(0) translateX(18px); } }
+
 /* ═══ LEVEL 2: BIOLUMINESCENT ═══ */
 /* Proximity-driven glow system. The JS hook sets --prox (0–1) based on
    cursor distance, --prox-x/--prox-y for gradient direction, and
@@ -1045,6 +1095,8 @@ body.detail-3 .hero-name-line.accent {
     0.03em 0 0 rgba(0,212,255,0.3);
 
   animation: crtDim 4s ease-in-out infinite, crtSplit 6.472s ease-in-out infinite;
+  filter: url(#crt-noise-lg);
+  transform: translateZ(0);
 }
 body.detail-3 .hero-bio {
   animation: none; opacity: 1;
@@ -1224,6 +1276,7 @@ body.detail-3 .lnk:is(:hover,.th),
 body.detail-3 .kw:is(:hover,.th),
 body.detail-3 .nav-a:is(:hover,.th) {
   filter: url(#crt-noise);
+  transform: translateZ(0); /* Safari: force own compositing layer to fix feTurbulence render lines */
 }
 
 /* CRT scanline overlay — card becomes a monitor on hover */

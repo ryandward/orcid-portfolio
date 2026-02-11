@@ -12,9 +12,11 @@ import { useRef, useEffect, useCallback } from 'react'
  * the disturbance, like dinoflagellates reacting to mechanical shear.
  */
 
-const SPORE_COUNT = 150
+const SPORE_COUNT = 250
 const PROXIMITY_RADIUS = 280
-const CURSOR_GLOW_RADIUS = 220
+const OU_THETA = 0.0003     // Ornstein-Uhlenbeck mean-reversion rate (loose spring)
+const BROWNIAN_SIGMA = 0.12 // Brownian noise amplitude (visible wandering)
+const ATTRACT_STRENGTH = 0.01 // cursor attraction (saturating)
 
 // Fast enzymatic rise, slow product-inhibited decay (asymmetric pulse)
 function enzymePulse(phase) {
@@ -36,12 +38,14 @@ export default function BiolumField({ active }) {
     const spores = []
     for (let i = 0; i < SPORE_COUNT; i++) {
       const golden = (i * 0.618033988749895) % 1
+      const homeX = Math.random() * w
+      const homeY = Math.random() * h
       spores.push({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        baseX: 0, baseY: 0,  // will be set to initial position
-        vx: (Math.random() - 0.5) * 0.08,
-        vy: -0.02 - Math.random() * 0.04,  // very gentle upward drift
+        x: homeX,
+        y: homeY,
+        homeX, homeY,  // Ornstein-Uhlenbeck mean-reversion target
+        vx: 0,
+        vy: 0,
         radius: 1.2 + Math.random() * 2.0,
         // Individual metabolic rate — Weyl-distributed periods
         period: 4 + golden * 6,
@@ -100,9 +104,7 @@ export default function BiolumField({ active }) {
 
       ctx.clearRect(0, 0, w, h)
 
-      // No cursor glow — proximity is expressed through spore excitation only
-
-      // Layer 2: Spore particles
+      // Spore particles
       const spores = sporesRef.current
       if (!spores) { animId = requestAnimationFrame(draw); return }
 
@@ -113,41 +115,52 @@ export default function BiolumField({ active }) {
         // Base luminescence from enzymatic pulse
         const baseLum = enzymePulse(s.phase) * s.maxAlpha
 
-        // Proximity excitation — mechanical shear from cursor
+        // Cursor interaction: saturating attraction
+        // Force plateaus near cursor so spores don't accelerate infinitely.
+        // Combined with OU mean-reversion, each spore finds an equilibrium
+        // between "toward cursor" and "toward home" — no convergence.
         let excite = 0
         if (mouse.active) {
-          const dx = s.x - mouse.x
-          const dy = s.y - mouse.y
+          const dx = mouse.x - s.x
+          const dy = mouse.y - s.y
           const dist = Math.sqrt(dx * dx + dy * dy)
           if (dist < PROXIMITY_RADIUS) {
             excite = 1 - dist / PROXIMITY_RADIUS
-            excite = excite * excite * 0.8  // quadratic falloff
+            excite = excite * excite * 0.8
 
-            // Gentle attraction — spores drift toward disturbance like
-            // dinoflagellates drawn to mechanical shear in the water
-            const angle = Math.atan2(dy, dx)
-            s.vx -= Math.cos(angle) * excite * 0.015
-            s.vy -= Math.sin(angle) * excite * 0.015
+            // Saturating attraction: strong at medium range, plateaus close
+            const sat = dist / (dist + 60)  // approaches 1 at large dist, 0 at cursor
+            const nx = dx / Math.max(dist, 1)
+            const ny = dy / Math.max(dist, 1)
+            s.vx += nx * sat * ATTRACT_STRENGTH
+            s.vy += ny * sat * ATTRACT_STRENGTH
           }
         }
 
         // Smooth excitation (don't snap)
         s.excitation += (excite - s.excitation) * 0.08
 
-        // Update position with drift + damping
+        // Ornstein-Uhlenbeck mean reversion: dv += θ(home - x)
+        // Each spore drifts back toward its home position, counterbalancing
+        // attraction and preventing permanent displacement or clustering.
+        s.vx += OU_THETA * (s.homeX - s.x)
+        s.vy += OU_THETA * (s.homeY - s.y)
+
+        // Brownian noise — Wiener process for organic stochasticity
+        s.vx += (Math.random() - 0.5) * BROWNIAN_SIGMA
+        s.vy += (Math.random() - 0.5) * BROWNIAN_SIGMA
+
+        // Update position with velocity damping (viscous medium)
         s.x += s.vx
         s.y += s.vy
-        s.vx *= 0.995
-        s.vy *= 0.995
+        s.vx *= 0.97
+        s.vy *= 0.97
 
-        // Wrap around edges with padding
+        // Wrap around edges
         if (s.x < -20) s.x = w + 20
         if (s.x > w + 20) s.x = -20
         if (s.y < -20) s.y = h + 20
         if (s.y > h + 20) s.y = -20
-
-        // Restore gentle upward drift
-        s.vy += (-0.03 - s.vy) * 0.001
 
         // Composite luminescence — excited spores glow much brighter
         const lum = Math.min(1, baseLum + s.excitation * 0.8)
