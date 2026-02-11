@@ -19,7 +19,7 @@ const SHAPES = [
 export default function GGEducation({ educations }) {
   const [hoveredIdx, setHoveredIdx] = useState(null)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
-  const { ref, width, margin } = useChartSize()
+  const { ref, width, margin, maxLabelW } = useChartSize()
 
   const items = educations.map(e => {
     const year = parseInt(e['end-date']?.year?.value || e['start-date']?.year?.value) || 0
@@ -99,6 +99,7 @@ export default function GGEducation({ educations }) {
         width={width}
         height={height}
         margin={margin}
+        maxLabelW={maxLabelW}
         xTicks={xTickVals}
         yTicks={labels}
         xScale={xScale}

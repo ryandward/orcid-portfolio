@@ -11,16 +11,20 @@ export function useChartSize(baseWidth = 800, baseMargin = { top: 10, right: 30,
     return () => obs.disconnect()
   }, [])
 
-  const width = Math.min(baseWidth, Math.max(containerW, 300))
-  const ratio = width / baseWidth
+  const width = Math.max(containerW, 300)
+  // Left margin keeps a floor so labels always have space
+  const leftMin = 80
+  const left = Math.max(leftMin, Math.round(baseMargin.left * (width / baseWidth)))
   const margin = {
     top: baseMargin.top,
-    right: Math.round(baseMargin.right * ratio),
+    right: Math.max(15, Math.round(baseMargin.right * (width / baseWidth))),
     bottom: baseMargin.bottom,
-    left: Math.round(baseMargin.left * ratio),
+    left,
   }
+  // Max pixel width available for y-axis label text
+  const maxLabelW = left - 15
 
-  return { ref, width, margin }
+  return { ref, width, margin, maxLabelW }
 }
 
 const MONTHS = {

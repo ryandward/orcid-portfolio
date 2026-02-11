@@ -1,10 +1,16 @@
-import { useRef } from 'react'
+function truncate(text, maxPx, fontSize = 10) {
+  const charW = fontSize * 0.58
+  const maxChars = Math.floor(maxPx / charW)
+  if (String(text).length <= maxChars) return String(text)
+  return String(text).slice(0, Math.max(1, maxChars - 1)) + '\u2026'
+}
 
 export default function GGPanel({
   caption,
   width = 800,
   height = 400,
   margin = { top: 10, right: 30, bottom: 50, left: 160 },
+  maxLabelW,
   xTicks = [],
   yTicks = [],
   xLabel,
@@ -17,8 +23,6 @@ export default function GGPanel({
   legend,
   tooltip,
 }) {
-  const containerRef = useRef(null)
-
   // Extract title from ggtitle() in caption
   const titleMatch = caption?.match(/ggtitle\(["'](.+?)["']\)/)
   const plotTitle = titleMatch ? titleMatch[1] : null
@@ -32,7 +36,7 @@ export default function GGPanel({
   const plotH = totalHeight - effectiveMarginTop - margin.bottom
 
   return (
-    <div className="gg-panel" ref={containerRef} style={{ position: 'relative' }}>
+    <div className="gg-panel" style={{ position: 'relative' }}>
       {caption && (() => {
         const parts = caption.split(' +')
         return (
@@ -50,7 +54,7 @@ export default function GGPanel({
         <svg
           viewBox={`0 0 ${width} ${totalHeight}`}
           width="100%"
-          style={{ display: 'block', maxWidth: width }}
+          style={{ display: 'block' }}
         >
           {/* plot title (ggtitle) */}
           {plotTitle && (
@@ -116,11 +120,16 @@ export default function GGPanel({
           {/* y-axis ticks + labels */}
           {yTicks.map((t, i) => {
             const y = yScale ? yScale(t) + titleH : 0
+            const full = formatY(t)
+            const display = maxLabelW ? truncate(full, maxLabelW) : full
             return (
               <g key={`yt-${i}`}>
                 <line x1={margin.left - 5} x2={margin.left} y1={y} y2={y} stroke="#4D4D4D"/>
                 <text x={margin.left - 10} y={y} textAnchor="end" dominantBaseline="central"
-                  className="gg-axis-label">{formatY(t)}</text>
+                  className="gg-axis-label">
+                  {display !== full && <title>{full}</title>}
+                  {display}
+                </text>
               </g>
             )
           })}

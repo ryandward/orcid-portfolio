@@ -3,13 +3,13 @@ import { useRef, useEffect } from 'react'
 export default function DnaHelix({ level = 2 }) {
   const canvasRef = useRef(null)
   useEffect(() => {
-    if (level === 1 || level === 4) return
+    if (level !== 2) return
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     let animId, t = 0
-    const speed = level === 3 ? 0.02 : 0.012
-    const alphaMult = level === 3 ? 1.5 : 1
+    const speed = 0.012
+    const alphaMult = 1
     function resize() {
       canvas.width = canvas.offsetWidth * window.devicePixelRatio
       canvas.height = canvas.offsetHeight * window.devicePixelRatio

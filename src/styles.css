@@ -23,20 +23,14 @@
 body.detail-1 {
   --reveal-duration: 0s; --reveal-ease: linear;
   --hover-lift: 0px; --glow-mult: 0.5;
-  --parallax-mult: 0;
-  --stagger-mult: 0;
 }
 body.detail-2 {
   --reveal-duration: 0.6s; --reveal-ease: cubic-bezier(0.16,1,0.3,1);
   --hover-lift: -2px; --glow-mult: 1;
-  --parallax-mult: 0.12;
-  --stagger-mult: 1;
 }
 body.detail-3 {
   --reveal-duration: 0.4s; --reveal-ease: cubic-bezier(0.16,1,0.3,1);
   --hover-lift: 0px; --glow-mult: 0;
-  --parallax-mult: 0;
-  --stagger-mult: 0.5;
   --accent: #FF006E;
   --accent-dim: rgba(255, 0, 110, 0.06);
   --accent-glow: rgba(255, 0, 110, 0.03);
@@ -80,8 +74,6 @@ body {
 
 /* ═══ GLOW CARD — mouse-tracking radial glow ═══ */
 .glow-card {
-  --glow-x: 50%;
-  --glow-y: 50%;
   position: relative;
   border: 1px solid var(--border);
   background: var(--bg-surface);
@@ -508,7 +500,7 @@ body.detail-1 .snake-node.now { animation: none; box-shadow: none; }
 }
 .se-title {
   font-family: 'Syne', sans-serif; font-size: 0.88rem;
-  color: #F0F2F8; font-weight: 700; line-height: 1.35;
+  color: var(--text-bright); font-weight: 700; line-height: 1.35;
 }
 .se-tags {
   display: flex; flex-wrap: wrap; gap: 0.2rem;
@@ -812,7 +804,6 @@ body.detail-3 .hero::after {
   pointer-events: none; z-index: 3;
 }
 body.detail-3 .hero-bg {
-  display: block;
   background:
     /* main splash cluster — always visible */
     radial-gradient(circle at 78% 42%, rgba(255,0,110,0.2) 0%, rgba(255,0,110,0.2) 7%, transparent 7.5%),
@@ -1001,7 +992,6 @@ body.detail-3 .pub-card:is(:hover,.th) {
 body.detail-3 .pub-year {
   color: var(--accent); font-size: 1.5rem; font-weight: 800;
 }
-body.detail-3 .pub-year::before { display: none; }
 body.detail-3 .pub-card:is(:hover,.th) .pub-year {
   animation: crtDim 4s ease-in-out infinite, crtSplit 6.472s ease-in-out infinite;
 }
@@ -1180,11 +1170,6 @@ body.detail-3 .detail-toast {
 
 /* ═══ LEVEL 4: ggplot(my_resume) ═══ */
 body.detail-4 {
-  --gg-panel-bg: #EBEBEB;
-  --gg-grid: #FFFFFF;
-  --gg-strip-bg: #D9D9D9;
-  --gg-strip-text: #1A1A1A;
-  --gg-axis: #4D4D4D;
   --bg: #FFFFFF;
   --bg-surface: #FFFFFF;
   --bg-elevated: #F5F5F5;
@@ -1205,8 +1190,6 @@ body.detail-4 {
   --reveal-ease: linear;
   --hover-lift: 0px;
   --glow-mult: 0;
-  --parallax-mult: 0;
-  --stagger-mult: 0;
   font-family: Helvetica, Arial, sans-serif;
   background: #FFFFFF;
   color: #1A1A1A;

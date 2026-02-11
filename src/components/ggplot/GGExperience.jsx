@@ -1,11 +1,11 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import GGPanel from './GGPanel'
 import { linearScale, categoricalScale, parseMonthYear, ggplotHue, niceTicks, useChartSize } from './scales'
 
 export default function GGExperience({ experience }) {
   const [hoveredIdx, setHoveredIdx] = useState(null)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
-  const { ref, width, margin } = useChartSize()
+  const { ref, width, margin, maxLabelW } = useChartSize()
 
   const now = new Date()
   const nowVal = now.getFullYear() + now.getMonth() / 12
@@ -74,6 +74,7 @@ export default function GGExperience({ experience }) {
         width={width}
         height={height}
         margin={margin}
+        maxLabelW={maxLabelW}
         xTicks={xTickVals}
         yTicks={roles}
         xScale={xScale}

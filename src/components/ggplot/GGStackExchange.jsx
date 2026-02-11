@@ -6,7 +6,7 @@ export default function GGStackExchange({ seData }) {
   const [hoveredKey, setHoveredKey] = useState(null)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const tappedRef = useRef(null)
-  const { ref, width, margin } = useChartSize()
+  const { ref, width, margin, maxLabelW } = useChartSize()
 
   const sites = useMemo(() => seData.map(s => {
     const hostname = new URL(s.site_url).hostname
@@ -101,6 +101,7 @@ export default function GGStackExchange({ seData }) {
         width={width}
         height={height}
         margin={margin}
+        maxLabelW={maxLabelW}
         xTicks={xTickVals}
         yTicks={names}
         xScale={xScale}

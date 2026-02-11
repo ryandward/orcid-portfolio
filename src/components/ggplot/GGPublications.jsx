@@ -7,7 +7,7 @@ export default function GGPublications({ works }) {
   const [hoveredIdx, setHoveredIdx] = useState(null)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const tappedRef = useRef(null)
-  const { ref, width, margin } = useChartSize()
+  const { ref, width, margin, maxLabelW } = useChartSize()
 
   const items = works.map(w => ({
     year: parseInt(workYear(w)) || 0,
@@ -88,6 +88,7 @@ export default function GGPublications({ works }) {
         width={width}
         height={height}
         margin={margin}
+        maxLabelW={maxLabelW}
         xTicks={xTickVals}
         yTicks={yTickVals}
         xScale={xScale}

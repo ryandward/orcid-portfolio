@@ -7,28 +7,6 @@ export const SE_API = 'https://api.stackexchange.com/2.3'
 export const SE_KEY = 'rl_wccxWRWHzAJvKRriRy1tCvccy'
 export const SE_FILTER = '!FuhdYD2u)f5mDp8hdYF).fIFse' // includes up/down_vote_count + is_accepted
 
-export const EPHEMERAL_NOCTURNE = {
-  name: 'Ephemeral Nocturne',
-  bg: '#090909',
-  fg: '#D8D8D8',
-  black: '#282828',
-  red: '#B22222',
-  green: '#66CD00',
-  yellow: '#CDAD00',
-  blue: '#1E90FF',
-  magenta: '#9400D3',
-  cyan: '#20B2AA',
-  white: '#C0C0C0',
-  brightBlack: '#5C5C5C',
-  brightRed: '#E34242',
-  brightGreen: '#8AF229',
-  brightYellow: '#E8C92A',
-  brightBlue: '#42A7F5',
-  brightMagenta: '#B164E3',
-  brightCyan: '#3CD6C2',
-  brightWhite: '#FFFFFF',
-}
-
 export const FALLBACK_BIO = "Geneticist and computational biologist who builds tools for people who don't know what GitHub is. CRISPRi pipelines for a lab that needed them yesterday. A fair loot system for 479 EverQuest players who just want their dragon drops. Zero GitHub stars. Lots of users."
 
 export const LINKEDIN = {
