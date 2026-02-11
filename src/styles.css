@@ -715,6 +715,230 @@ body.detail-1 .detail-toast {
 body.detail-1::-webkit-scrollbar-track { background: #fff; }
 body.detail-1::-webkit-scrollbar-thumb { background: #ccc; }
 
+/* ═══ LEVEL 2: BIOLUMINESCENT ═══ */
+
+/* Hero glow drift — gradient pools translate like light in deep water */
+@keyframes heroGlowDrift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(3%, -2%) scale(1.03); }
+  66% { transform: translate(-2%, 2%) scale(1.02); }
+}
+body.detail-2 .hero-bg {
+  animation: heroGlowDrift 18s ease-in-out infinite;
+}
+/* Hero name donor flash — cyan via filter:drop-shadow (same property/shape as card bioGlowCyan) */
+@keyframes heroBioCyanDonor {
+  0%   { color: rgba(0,212,255,0.12); filter: drop-shadow(0 0 4px rgba(0,212,255,0.06)); }
+  4%   { color: rgba(0,212,255,1.0);  filter: drop-shadow(0 0 14px rgba(0,212,255,0.30)); }
+  12%  { color: rgba(0,212,255,1.0);  filter: drop-shadow(0 0 28px rgba(0,212,255,0.55)); }
+  20%  { color: rgba(0,232,200,0.8);  filter: drop-shadow(0 0 18px rgba(0,212,255,0.30)); }
+  40%  { color: rgba(0,255,136,0.4);  filter: drop-shadow(0 0 10px rgba(0,212,255,0.14)); }
+  70%  { color: rgba(0,212,255,0.12); filter: drop-shadow(0 0 6px rgba(0,212,255,0.08)); }
+  100% { color: rgba(0,212,255,0.12); filter: drop-shadow(0 0 4px rgba(0,212,255,0.06)); }
+}
+/* Hero name acceptor re-emission — green via text-shadow (delayed peak, BRET ~50% intensity) */
+@keyframes heroBioGreenAcceptor {
+  0%   { text-shadow: 0 0 6px rgba(0,255,136,0.0); }
+  8%   { text-shadow: 0 0 14px rgba(0,255,136,0.10); }
+  18%  { text-shadow: 0 0 30px rgba(0,255,136,0.35), 0 0 60px rgba(0,255,136,0.10); }
+  30%  { text-shadow: 0 0 20px rgba(0,255,136,0.20); }
+  55%  { text-shadow: 0 0 10px rgba(0,255,136,0.08); }
+  100% { text-shadow: 0 0 6px rgba(0,255,136,0.0); }
+}
+body.detail-2 .hero-name-line.accent {
+  color: rgba(0,212,255,0.12);
+  text-shadow: none;
+  filter: none;
+  animation: nameReveal 0.7s cubic-bezier(0.16,1,0.3,1) forwards,
+             heroBioCyanDonor 3s ease-in-out infinite,
+             heroBioGreenAcceptor 8.155s ease-in-out infinite;
+}
+
+/* Snake track — living vein */
+@keyframes trackFlow {
+  0%, 100% { background-position: 0 0; }
+  50% { background-position: 0 100%; }
+}
+body.detail-2 .snake-track::before {
+  background: linear-gradient(to bottom,
+    rgba(0,255,136,0.5), rgba(0,212,255,0.3), rgba(0,255,136,0.5));
+  background-size: 100% 200%;
+  animation: trackFlow 5s ease-in-out infinite;
+}
+body.detail-2 .snake-track::after {
+  background: linear-gradient(to right,
+    rgba(0,255,136,0.4), rgba(0,212,255,0.25));
+}
+
+/* Layer 1: Cyan luciferase donor — fast enzymatic flash, slow product-inhibited decay
+   Coelenterazine + O₂ → ~480nm blue-cyan emission (Michaelis-Menten kinetics) */
+@keyframes bioGlowCyan {
+  0%   { filter: drop-shadow(0 0 4px rgba(0,212,255,0.06)); }
+  4%   { filter: drop-shadow(0 0 12px rgba(0,212,255,0.20)); }
+  12%  { filter: drop-shadow(0 0 22px rgba(0,212,255,0.40)); }
+  20%  { filter: drop-shadow(0 0 16px rgba(0,212,255,0.28)); }
+  40%  { filter: drop-shadow(0 0 10px rgba(0,212,255,0.14)); }
+  70%  { filter: drop-shadow(0 0 6px rgba(0,212,255,0.08)); }
+  100% { filter: drop-shadow(0 0 4px rgba(0,212,255,0.06)); }
+}
+
+/* Layer 2: Green GFP acceptor re-emission — delayed peak, lower intensity (BRET ~50%)
+   Non-radiative energy transfer → GFP re-emits at ~509nm green, temporally delayed */
+@keyframes bioGlowGreen {
+  0%   { box-shadow: 0 0 6px rgba(0,255,136,0.0), inset 0 0 8px rgba(0,255,136,0.0); }
+  8%   { box-shadow: 0 0 12px rgba(0,255,136,0.10), inset 0 0 18px rgba(0,255,136,0.03); }
+  18%  { box-shadow: 0 0 24px rgba(0,255,136,0.20), inset 0 0 36px rgba(0,255,136,0.05); }
+  30%  { box-shadow: 0 0 16px rgba(0,255,136,0.12), inset 0 0 22px rgba(0,255,136,0.03); }
+  55%  { box-shadow: 0 0 8px rgba(0,255,136,0.05), inset 0 0 10px rgba(0,255,136,0.01); }
+  100% { box-shadow: 0 0 6px rgba(0,255,136,0.0), inset 0 0 8px rgba(0,255,136,0.0); }
+}
+
+/* SE cards: green-primary organism (reversed BRET — different donor/acceptor pair) */
+@keyframes bioGlowGreenPrimary {
+  0%   { filter: drop-shadow(0 0 4px rgba(0,255,136,0.06)); }
+  4%   { filter: drop-shadow(0 0 12px rgba(0,255,136,0.20)); }
+  12%  { filter: drop-shadow(0 0 22px rgba(0,255,136,0.40)); }
+  20%  { filter: drop-shadow(0 0 16px rgba(0,255,136,0.28)); }
+  40%  { filter: drop-shadow(0 0 10px rgba(0,255,136,0.14)); }
+  70%  { filter: drop-shadow(0 0 6px rgba(0,255,136,0.08)); }
+  100% { filter: drop-shadow(0 0 4px rgba(0,255,136,0.06)); }
+}
+@keyframes bioGlowCyanSecondary {
+  0%   { box-shadow: 0 0 6px rgba(0,212,255,0.0), inset 0 0 8px rgba(0,212,255,0.0); }
+  8%   { box-shadow: 0 0 12px rgba(0,212,255,0.10), inset 0 0 18px rgba(0,212,255,0.03); }
+  18%  { box-shadow: 0 0 24px rgba(0,212,255,0.20), inset 0 0 36px rgba(0,212,255,0.05); }
+  30%  { box-shadow: 0 0 16px rgba(0,212,255,0.12), inset 0 0 22px rgba(0,212,255,0.03); }
+  55%  { box-shadow: 0 0 8px rgba(0,212,255,0.05), inset 0 0 10px rgba(0,212,255,0.01); }
+  100% { box-shadow: 0 0 6px rgba(0,212,255,0.0), inset 0 0 8px rgba(0,212,255,0.0); }
+}
+
+/* Text glow: BRET temporal delay — cyan donor peaks at 12%, green acceptor peaks at 35%
+   color itself shifts through the emission spectrum, not just the shadow */
+@keyframes textBioGlow {
+  0%   { color: rgba(0,212,255,0.15);
+         text-shadow: 0 0 4px rgba(0,212,255,0.05), 0 0 4px rgba(0,255,136,0.03); }
+  4%   { color: rgba(0,212,255,1.0);
+         text-shadow: 0 0 12px rgba(0,212,255,0.25), 0 0 6px rgba(0,255,136,0.05); }
+  12%  { color: rgba(0,212,255,1.0);
+         text-shadow: 0 0 24px rgba(0,212,255,0.55), 0 0 48px rgba(0,212,255,0.15),
+                      0 0 8px rgba(0,255,136,0.08); }
+  20%  { color: rgba(0,232,200,0.8);
+         text-shadow: 0 0 16px rgba(0,212,255,0.30), 0 0 12px rgba(0,255,136,0.15); }
+  35%  { color: rgba(0,255,136,0.9);
+         text-shadow: 0 0 10px rgba(0,212,255,0.12), 0 0 20px rgba(0,255,136,0.35),
+                      0 0 40px rgba(0,255,136,0.10); }
+  50%  { color: rgba(0,255,136,0.4);
+         text-shadow: 0 0 6px rgba(0,212,255,0.06), 0 0 14px rgba(0,255,136,0.20); }
+  70%  { color: rgba(0,212,255,0.15);
+         text-shadow: 0 0 4px rgba(0,212,255,0.04), 0 0 8px rgba(0,255,136,0.08); }
+  100% { color: rgba(0,212,255,0.15);
+         text-shadow: 0 0 4px rgba(0,212,255,0.05), 0 0 4px rgba(0,255,136,0.03); }
+}
+
+/* SE text glow: reversed organism — green donor peaks first, cyan acceptor trails */
+@keyframes textBioGlowCyan {
+  0%   { color: rgba(0,255,136,0.15);
+         text-shadow: 0 0 4px rgba(0,255,136,0.05), 0 0 4px rgba(0,212,255,0.03); }
+  4%   { color: rgba(0,255,136,1.0);
+         text-shadow: 0 0 12px rgba(0,255,136,0.25), 0 0 6px rgba(0,212,255,0.05); }
+  12%  { color: rgba(0,255,136,1.0);
+         text-shadow: 0 0 24px rgba(0,255,136,0.55), 0 0 48px rgba(0,255,136,0.15),
+                      0 0 8px rgba(0,212,255,0.08); }
+  20%  { color: rgba(0,232,200,0.8);
+         text-shadow: 0 0 16px rgba(0,255,136,0.30), 0 0 12px rgba(0,212,255,0.15); }
+  35%  { color: rgba(0,212,255,0.9);
+         text-shadow: 0 0 10px rgba(0,255,136,0.12), 0 0 20px rgba(0,212,255,0.35),
+                      0 0 40px rgba(0,212,255,0.10); }
+  50%  { color: rgba(0,212,255,0.4);
+         text-shadow: 0 0 6px rgba(0,255,136,0.06), 0 0 14px rgba(0,212,255,0.20); }
+  70%  { color: rgba(0,255,136,0.15);
+         text-shadow: 0 0 4px rgba(0,255,136,0.04), 0 0 8px rgba(0,212,255,0.08); }
+  100% { color: rgba(0,255,136,0.15);
+         text-shadow: 0 0 4px rgba(0,255,136,0.05), 0 0 4px rgba(0,212,255,0.03); }
+}
+
+/* Ambient asymmetric pulse — enzyme kinetics at ambient scale */
+@keyframes ambientPulse {
+  0%   { opacity: 0.35; }
+  15%  { opacity: 1; }
+  30%  { opacity: 0.7; }
+  100% { opacity: 0.35; }
+}
+
+/* Neutralise base color-swaps per element */
+/* 3s cyan donor (filter) + 8.155s green acceptor (box-shadow) — Euler-ratio coupling (3e ≈ 8.155) */
+body.detail-2 .snake-card:is(:hover,.th) {
+  background: var(--bg-surface);
+  animation:
+    bioGlowCyan 3s ease-in-out infinite,
+    bioGlowGreen 8.155s ease-in-out infinite;
+}
+body.detail-2 .snake-card:is(:hover,.th) .snake-role {
+  color: var(--text-bright);
+  animation: textBioGlow 3s ease-in-out infinite;
+}
+body.detail-2 .pub-card:is(:hover,.th) {
+  border-top-color: var(--text-ghost);
+  animation:
+    bioGlowCyan 3s ease-in-out infinite,
+    bioGlowGreen 8.155s ease-in-out infinite;
+}
+body.detail-2 .pub-card:is(:hover,.th) .pub-year {
+  animation: textBioGlow 3s ease-in-out infinite;
+}
+body.detail-2 .pub-card:is(:hover,.th) .pub-type {
+  border-color: var(--border); color: var(--text-ghost); background: transparent;
+  animation: textBioGlow 3s ease-in-out infinite;
+}
+body.detail-2 .pub-card:is(:hover,.th) .pub-arrow {
+  animation: textBioGlow 3s ease-in-out infinite;
+}
+/* SE cards: green-primary organism — reversed BRET (green filter + cyan box-shadow) */
+body.detail-2 .se-card:is(:hover,.th) {
+  border-color: rgba(0,212,255,0.2);
+  border-left-color: rgba(0,212,255,0.2);
+  animation:
+    bioGlowGreenPrimary 3s ease-in-out infinite,
+    bioGlowCyanSecondary 8.155s ease-in-out infinite;
+}
+body.detail-2 .se-card:is(:hover,.th) .se-score {
+  animation: textBioGlowCyan 3s ease-in-out infinite;
+}
+body.detail-2 .se-card:is(:hover,.th) .se-tag {
+  border-color: rgba(0,255,136,0.12); color: rgba(0,255,136,0.8); background: rgba(0,255,136,0.06);
+  animation: textBioGlowCyan 3s ease-in-out infinite;
+}
+body.detail-2 .se-card:is(:hover,.th) .se-arrow {
+  animation: textBioGlowCyan 3s ease-in-out infinite;
+}
+body.detail-2 .kw:is(:hover,.th) {
+  border-color: var(--text-ghost);
+  color: var(--text);
+  background: transparent;
+  animation:
+    bioGlowCyan 3s ease-in-out infinite,
+    bioGlowGreen 8.155s ease-in-out infinite;
+}
+body.detail-2 .lnk:is(:hover,.th) {
+  border-bottom-color: var(--text-ghost);
+  background: transparent;
+  animation:
+    bioGlowCyan 3s ease-in-out infinite,
+    bioGlowGreen 8.155s ease-in-out infinite;
+}
+body.detail-2 .lnk:is(:hover,.th) .lnk-icon {
+  background: var(--bg-elevated); color: var(--text-dim); border-color: var(--border);
+  animation: textBioGlow 3s ease-in-out infinite;
+}
+
+/* Section line + snake track ambient breathing — Weyl-detuned via --bio-dur */
+body.detail-2 .sec-line {
+  animation: ambientPulse var(--bio-dur, 5s) ease-in-out infinite;
+}
+body.detail-2 .snake-track {
+  animation: ambientPulse var(--bio-dur, 5s) ease-in-out infinite;
+}
+
 /* ═══ LEVEL 3: EDITORIAL OVERDRIVE ═══ */
 
 /* Kill decorative elements outside hero */
@@ -1472,6 +1696,7 @@ body.detail-4::-webkit-scrollbar-thumb { background: #D9D9D9; }
   .snake-card.left, .snake-card.right {
     grid-column: 2; grid-row: 1; text-align: left;
     border-left-color: var(--track); border-right-color: var(--border);
+    margin: 0.35rem 0;
   }
   .pub-grid { grid-template-columns: 1fr; }
   .se-site-line { display: none; }

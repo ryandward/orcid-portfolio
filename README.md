@@ -15,8 +15,47 @@ The site has three visual modes, toggled via the **1 / 2 / 3** buttons in the na
 | Level | Name | Description |
 |-------|------|-------------|
 | **1** | `css: unloaded` | Times New Roman, blue links, bare HTML aesthetic — "forgot the stylesheet" |
-| **2** | `detail: normal` | Space Mono, dark theme, green accent, animated DNA helix canvas |
+| **2** | `bioluminescent` | Space Mono, dark theme, dual-layer BRET glow simulation, Weyl-detuned ambient pulsing |
 | **3** | `EDITORIAL MODE` | Georgia serif, warm paper (#E8E3DC), hot pink (#FF006E) accent, full CRT interference simulation |
+
+## Level 2: Bioluminescence Simulation
+
+The bioluminescent mode models real BRET (Bioluminescence Resonance Energy Transfer) physics using layered CSS animations and mathematically-detuned oscillators.
+
+### Asymmetric Enzyme-Kinetics Keyframes
+
+Real bioluminescence follows Michaelis-Menten kinetics with product inhibition: the luciferase-catalyzed reaction produces a fast flash (rise in ~4% of the cycle) followed by slow exponential decay as oxyluciferin inhibits the enzyme (remaining 96%). The keyframes encode this asymmetric curve directly — not a sine wave.
+
+### BRET Energy Cascade (Cyan &rarr; Green)
+
+In real BRET, a coelenterazine donor emits at ~480nm (cyan) first, then non-radiatively transfers energy to a GFP acceptor which re-emits at ~509nm (green) with a temporal delay. Energy always flows from shorter wavelength (higher energy) to longer wavelength — a thermodynamic constraint.
+
+Each hovered card runs two animation layers on separate CSS properties (filter + box-shadow) so they stack without conflict:
+
+```
+bioGlowCyan:  3s      (filter — cyan donor flash, Michaelis-Menten shape)
+bioGlowGreen: 3e s    (box-shadow — green acceptor re-emission, delayed peak)
+```
+
+Text color itself animates through the emission spectrum: neutral &rarr; cyan donor flash &rarr; green acceptor peak &rarr; fade to neutral.
+
+### Euler's Number Duration Coupling
+
+The two glow layers run at durations coupled by **e** (Euler's number, &approx; 2.718): green runs at 3s, cyan at 3*e* &approx; 8.155s. Where Level 3 uses &phi; (algebraic irrational from number theory), Level 2 uses *e* (transcendental, from calculus) — the natural constant of exponential growth and decay, and the mathematical foundation of enzyme kinetics. Near-alignment takes ~80s.
+
+### Weyl Equidistribution (Ambient Detuning)
+
+Where Level 3 distributes animation *phases* (R&#x2082; sequence &mdash; every element starts at a different point), Level 2 distributes animation *durations* via Weyl's equidistribution theorem:
+
+```
+duration_n = BASE + RANGE * frac(n * sqrt(2))
+```
+
+By Weyl's theorem, frac(*n*&sdot;&radic;2) is equidistributed on [0,1], giving well-spread duration perturbations. Each section line and snake track pulses at its own natural frequency (5&ndash;7s), drifting in and out of near-synchronization — like a dinoflagellate colony where each organism has its own metabolic rate.
+
+### SE Cards: Reversed Organism
+
+Stack Exchange cards represent a different bioluminescent species with reversed donor/acceptor: green donor flash first, cyan acceptor trailing. Text shifts green &rarr; cyan instead of cyan &rarr; green.
 
 ## Level 3: CRT Simulation
 
