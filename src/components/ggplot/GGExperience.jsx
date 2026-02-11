@@ -1,11 +1,11 @@
 import { useState, useRef } from 'react'
 import GGPanel from './GGPanel'
-import { linearScale, categoricalScale, parseMonthYear, ggplotHue, niceTicks } from './scales'
+import { linearScale, categoricalScale, parseMonthYear, ggplotHue, niceTicks, useChartSize } from './scales'
 
 export default function GGExperience({ experience }) {
   const [hoveredIdx, setHoveredIdx] = useState(null)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
-  const svgRef = useRef(null)
+  const { ref, width, margin } = useChartSize()
 
   const now = new Date()
   const nowVal = now.getFullYear() + now.getMonth() / 12
@@ -25,9 +25,7 @@ export default function GGExperience({ experience }) {
   const minYear = Math.floor(Math.min(...allStarts))
   const maxYear = Math.ceil(Math.max(...allEnds))
 
-  const margin = { top: 10, right: 30, bottom: 50, left: 160 }
   const height = Math.max(300, roles.length * 40 + margin.top + margin.bottom)
-  const width = 800
 
   const plotW = width - margin.left - margin.right
   const plotH = height - margin.top - margin.bottom
@@ -69,43 +67,45 @@ export default function GGExperience({ experience }) {
   } : null
 
   return (
-    <GGPanel
-      caption={'ggplot(experience, aes(x = year, y = role, fill = org)) + geom_segment() + ggtitle("Experience")'}
-      width={width}
-      height={height}
-      margin={margin}
-      xTicks={xTickVals}
-      yTicks={roles}
-      xScale={xScale}
-      yScale={yScale}
-      formatX={v => String(Math.round(v))}
-      formatY={v => v}
-      xLabel="Year"
-      legend={legend}
-      tooltip={tooltip}
-    >
-      {items.map((e, i) => {
-        const x1 = xScale(e.startVal)
-        const x2 = xScale(e.endVal)
-        const y = yScale(e.title)
-        const barH = 22
-        return (
-          <g key={i}
-            onMouseEnter={() => setHoveredIdx(i)}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={() => setHoveredIdx(null)}
-            style={{ cursor: 'default' }}
-          >
-            <rect
-              x={x1} y={y - barH / 2}
-              width={Math.max(x2 - x1, 3)} height={barH}
-              fill={colorMap[e.org]}
-              rx={2}
-              opacity={hoveredIdx === null || hoveredIdx === i ? 1 : 0.4}
-            />
-          </g>
-        )
-      })}
-    </GGPanel>
+    <div ref={ref}>
+      <GGPanel
+        caption={'ggplot(experience, aes(x = year, y = role, fill = org)) + geom_segment() + ggtitle("Experience")'}
+        width={width}
+        height={height}
+        margin={margin}
+        xTicks={xTickVals}
+        yTicks={roles}
+        xScale={xScale}
+        yScale={yScale}
+        formatX={v => String(Math.round(v))}
+        formatY={v => v}
+        xLabel="Year"
+        legend={legend}
+        tooltip={tooltip}
+      >
+        {items.map((e, i) => {
+          const x1 = xScale(e.startVal)
+          const x2 = xScale(e.endVal)
+          const y = yScale(e.title)
+          const barH = 22
+          return (
+            <g key={i}
+              onMouseEnter={() => setHoveredIdx(i)}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={() => setHoveredIdx(null)}
+              style={{ cursor: 'default' }}
+            >
+              <rect
+                x={x1} y={y - barH / 2}
+                width={Math.max(x2 - x1, 3)} height={barH}
+                fill={colorMap[e.org]}
+                rx={2}
+                opacity={hoveredIdx === null || hoveredIdx === i ? 1 : 0.4}
+              />
+            </g>
+          )
+        })}
+      </GGPanel>
+    </div>
   )
 }

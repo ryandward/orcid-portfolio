@@ -1,3 +1,28 @@
+import { useState, useEffect, useRef } from 'react'
+
+export function useChartSize(baseWidth = 800, baseMargin = { top: 10, right: 30, bottom: 50, left: 160 }) {
+  const ref = useRef(null)
+  const [containerW, setContainerW] = useState(baseWidth)
+
+  useEffect(() => {
+    if (!ref.current) return
+    const obs = new ResizeObserver(([e]) => setContainerW(e.contentRect.width))
+    obs.observe(ref.current)
+    return () => obs.disconnect()
+  }, [])
+
+  const width = Math.min(baseWidth, Math.max(containerW, 300))
+  const ratio = width / baseWidth
+  const margin = {
+    top: baseMargin.top,
+    right: Math.round(baseMargin.right * ratio),
+    bottom: baseMargin.bottom,
+    left: Math.round(baseMargin.left * ratio),
+  }
+
+  return { ref, width, margin }
+}
+
 const MONTHS = {
   jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
   jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,

@@ -1,11 +1,12 @@
 import { useState, useMemo, useRef } from 'react'
 import GGPanel from './GGPanel'
-import { linearScale, categoricalScale, ggplotHue, niceTicks } from './scales'
+import { linearScale, categoricalScale, ggplotHue, niceTicks, useChartSize } from './scales'
 
 export default function GGStackExchange({ seData }) {
   const [hoveredKey, setHoveredKey] = useState(null)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const tappedRef = useRef(null)
+  const { ref, width, margin } = useChartSize()
 
   const sites = useMemo(() => seData.map(s => {
     const hostname = new URL(s.site_url).hostname
@@ -54,9 +55,7 @@ export default function GGStackExchange({ seData }) {
   const names = sites.map(s => s.name)
   const maxRep = Math.max(...sites.map(s => s.reputation))
 
-  const margin = { top: 10, right: 30, bottom: 50, left: 160 }
   const height = Math.max(200, sites.length * 45 + margin.top + margin.bottom)
-  const width = 800
   const plotW = width - margin.left - margin.right
   const plotH = height - margin.top - margin.bottom
 
@@ -96,79 +95,81 @@ export default function GGStackExchange({ seData }) {
   const barH = 24
 
   return (
-    <GGPanel
-      caption={'ggplot(stack_exchange, aes(x = reputation, y = site, fill = item)) + geom_col(position = "stack") + ggtitle("Stack Exchange")'}
-      width={width}
-      height={height}
-      margin={margin}
-      xTicks={xTickVals}
-      yTicks={names}
-      xScale={xScale}
-      yScale={yScale}
-      formatX={v => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : String(Math.round(v))}
-      formatY={v => v}
-      xLabel="Reputation"
-      tooltip={tooltip}
-    >
-      {sites.map((site, si) => {
-        const y = yScale(site.name)
-        let cursor = 0
+    <div ref={ref}>
+      <GGPanel
+        caption={'ggplot(stack_exchange, aes(x = reputation, y = site, fill = item)) + geom_col(position = "stack") + ggtitle("Stack Exchange")'}
+        width={width}
+        height={height}
+        margin={margin}
+        xTicks={xTickVals}
+        yTicks={names}
+        xScale={xScale}
+        yScale={yScale}
+        formatX={v => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : String(Math.round(v))}
+        formatY={v => v}
+        xLabel="Reputation"
+        tooltip={tooltip}
+      >
+        {sites.map((site, si) => {
+          const y = yScale(site.name)
+          let cursor = 0
 
-        return (
-          <g key={si}>
-            {/* Question/answer segments */}
-            {site.segments.map((seg, qi) => {
-              const key = `${si}-${qi}`
-              const segStart = cursor
-              cursor += seg.value
-              const x0 = xScale(segStart)
-              const x1 = xScale(segStart + seg.value)
-              const w = Math.max(x1 - x0, 2)
-              return (
-                <rect
-                  key={key}
-                  x={x0} y={y - barH / 2}
-                  width={w} height={barH}
-                  fill={colorFor(si, qi)}
-                  opacity={hoveredKey === null || hoveredKey === key ? 1 : 0.4}
-                  style={{ cursor: 'pointer' }}
-                  onMouseEnter={() => setHoveredKey(key)}
-                  onMouseMove={handleMouseMove}
-                  onMouseLeave={() => setHoveredKey(null)}
-                  onClick={(e) => {
-                    if ('ontouchstart' in window && tappedRef.current !== key) {
-                      e.preventDefault()
-                      tappedRef.current = key
-                      setHoveredKey(key)
-                      const svg = e.currentTarget.closest('svg')
-                      if (svg) {
-                        const rect = svg.getBoundingClientRect()
-                        setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+          return (
+            <g key={si}>
+              {/* Question/answer segments */}
+              {site.segments.map((seg, qi) => {
+                const key = `${si}-${qi}`
+                const segStart = cursor
+                cursor += seg.value
+                const x0 = xScale(segStart)
+                const x1 = xScale(segStart + seg.value)
+                const w = Math.max(x1 - x0, 2)
+                return (
+                  <rect
+                    key={key}
+                    x={x0} y={y - barH / 2}
+                    width={w} height={barH}
+                    fill={colorFor(si, qi)}
+                    opacity={hoveredKey === null || hoveredKey === key ? 1 : 0.4}
+                    style={{ cursor: 'pointer' }}
+                    onMouseEnter={() => setHoveredKey(key)}
+                    onMouseMove={handleMouseMove}
+                    onMouseLeave={() => setHoveredKey(null)}
+                    onClick={(e) => {
+                      if ('ontouchstart' in window && tappedRef.current !== key) {
+                        e.preventDefault()
+                        tappedRef.current = key
+                        setHoveredKey(key)
+                        const svg = e.currentTarget.closest('svg')
+                        if (svg) {
+                          const rect = svg.getBoundingClientRect()
+                          setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+                        }
+                        return
                       }
-                      return
-                    }
-                    window.open(seg.link, '_blank', 'noopener')
-                  }}
-                />
-              )
-            })}
-            {/* "(other)" segment */}
-            {site.other > 0 && (() => {
-              const x0 = xScale(cursor)
-              const x1 = xScale(cursor + site.other)
-              const w = Math.max(x1 - x0, 2)
-              return (
-                <rect
-                  x={x0} y={y - barH / 2}
-                  width={w} height={barH}
-                  fill="#B0B0B0"
-                  opacity={hoveredKey === null ? 1 : 0.4}
-                />
-              )
-            })()}
-          </g>
-        )
-      })}
-    </GGPanel>
+                      window.open(seg.link, '_blank', 'noopener')
+                    }}
+                  />
+                )
+              })}
+              {/* "(other)" segment */}
+              {site.other > 0 && (() => {
+                const x0 = xScale(cursor)
+                const x1 = xScale(cursor + site.other)
+                const w = Math.max(x1 - x0, 2)
+                return (
+                  <rect
+                    x={x0} y={y - barH / 2}
+                    width={w} height={barH}
+                    fill="#B0B0B0"
+                    opacity={hoveredKey === null ? 1 : 0.4}
+                  />
+                )
+              })()}
+            </g>
+          )
+        })}
+      </GGPanel>
+    </div>
   )
 }

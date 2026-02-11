@@ -1,12 +1,13 @@
 import { useState, useRef } from 'react'
 import { cleanType, getDoiUrl, workYear, fixTitle } from '../../utils'
 import GGPanel from './GGPanel'
-import { linearScale, ggplotHue, niceTicks } from './scales'
+import { linearScale, ggplotHue, niceTicks, useChartSize } from './scales'
 
 export default function GGPublications({ works }) {
   const [hoveredIdx, setHoveredIdx] = useState(null)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const tappedRef = useRef(null)
+  const { ref, width, margin } = useChartSize()
 
   const items = works.map(w => ({
     year: parseInt(workYear(w)) || 0,
@@ -31,9 +32,7 @@ export default function GGPublications({ works }) {
   const maxYear = Math.max(...years) + 1
   const maxStack = Math.max(...Object.values(yearGroups).map(g => g.length))
 
-  const margin = { top: 10, right: 30, bottom: 50, left: 160 }
   const height = Math.max(300, maxStack * 28 + margin.top + margin.bottom)
-  const width = 800
   const plotW = width - margin.left - margin.right
   const plotH = height - margin.top - margin.bottom
 
@@ -82,57 +81,59 @@ export default function GGPublications({ works }) {
   } : null
 
   return (
-    <GGPanel
-      caption={'ggplot(works, aes(x = year, fill = type)) + geom_dotplot() + ggtitle("Publications")'}
-      width={width}
-      height={height}
-      margin={margin}
-      xTicks={xTickVals}
-      yTicks={yTickVals}
-      xScale={xScale}
-      yScale={yScale}
-      formatX={v => String(Math.round(v))}
-      formatY={v => String(Math.round(v))}
-      xLabel="Publication Year"
-      yLabel="Count"
-      legend={legend}
-      tooltip={tooltip}
-    >
-      {dots.map((d, i) => {
-        const cx = xScale(d.year)
-        const cy = yScale(d.stackIdx)
-        return (
-          <g key={i}
-            onMouseEnter={() => setHoveredIdx(i)}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={() => setHoveredIdx(null)}
-            onClick={(e) => {
-              if (!d.doi) return
-              if ('ontouchstart' in window && tappedRef.current !== i) {
-                e.preventDefault()
-                tappedRef.current = i
-                setHoveredIdx(i)
-                const svg = e.currentTarget.closest('svg')
-                if (svg) {
-                  const rect = svg.getBoundingClientRect()
-                  setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+    <div ref={ref}>
+      <GGPanel
+        caption={'ggplot(works, aes(x = year, fill = type)) + geom_dotplot() + ggtitle("Publications")'}
+        width={width}
+        height={height}
+        margin={margin}
+        xTicks={xTickVals}
+        yTicks={yTickVals}
+        xScale={xScale}
+        yScale={yScale}
+        formatX={v => String(Math.round(v))}
+        formatY={v => String(Math.round(v))}
+        xLabel="Publication Year"
+        yLabel="Count"
+        legend={legend}
+        tooltip={tooltip}
+      >
+        {dots.map((d, i) => {
+          const cx = xScale(d.year)
+          const cy = yScale(d.stackIdx)
+          return (
+            <g key={i}
+              onMouseEnter={() => setHoveredIdx(i)}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={() => setHoveredIdx(null)}
+              onClick={(e) => {
+                if (!d.doi) return
+                if ('ontouchstart' in window && tappedRef.current !== i) {
+                  e.preventDefault()
+                  tappedRef.current = i
+                  setHoveredIdx(i)
+                  const svg = e.currentTarget.closest('svg')
+                  if (svg) {
+                    const rect = svg.getBoundingClientRect()
+                    setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+                  }
+                  return
                 }
-                return
-              }
-              window.open(d.doi, '_blank', 'noopener')
-            }}
-            style={{ cursor: d.doi ? 'pointer' : 'default' }}
-          >
-            <circle
-              cx={cx} cy={cy} r={10}
-              fill={colorMap[d.type]}
-              opacity={hoveredIdx === null || hoveredIdx === i ? 0.85 : 0.35}
-              stroke={hoveredIdx === i ? '#000' : 'none'}
-              strokeWidth={1.5}
-            />
-          </g>
-        )
-      })}
-    </GGPanel>
+                window.open(d.doi, '_blank', 'noopener')
+              }}
+              style={{ cursor: d.doi ? 'pointer' : 'default' }}
+            >
+              <circle
+                cx={cx} cy={cy} r={10}
+                fill={colorMap[d.type]}
+                opacity={hoveredIdx === null || hoveredIdx === i ? 0.85 : 0.35}
+                stroke={hoveredIdx === i ? '#000' : 'none'}
+                strokeWidth={1.5}
+              />
+            </g>
+          )
+        })}
+      </GGPanel>
+    </div>
   )
 }

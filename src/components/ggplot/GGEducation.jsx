@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import GGPanel from './GGPanel'
-import { linearScale, categoricalScale, ggplotHue, niceTicks } from './scales'
+import { linearScale, categoricalScale, ggplotHue, niceTicks, useChartSize } from './scales'
 
 // ggplot2-style point shapes (SVG paths centered on 0,0)
 const SHAPES = [
@@ -19,6 +19,7 @@ const SHAPES = [
 export default function GGEducation({ educations }) {
   const [hoveredIdx, setHoveredIdx] = useState(null)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+  const { ref, width, margin } = useChartSize()
 
   const items = educations.map(e => {
     const year = parseInt(e['end-date']?.year?.value || e['start-date']?.year?.value) || 0
@@ -37,9 +38,7 @@ export default function GGEducation({ educations }) {
   const minYear = Math.min(...years) - 2
   const maxYear = Math.max(...years) + 2
 
-  const margin = { top: 10, right: 30, bottom: 50, left: 160 }
   const height = Math.max(180, labels.length * 50 + margin.top + margin.bottom)
-  const width = 800
   const plotW = width - margin.left - margin.right
   const plotH = height - margin.top - margin.bottom
 
@@ -94,52 +93,54 @@ export default function GGEducation({ educations }) {
   } : null
 
   return (
-    <GGPanel
-      caption={'ggplot(education, aes(x = year, y = degree, color = degree, shape = institution)) + geom_point(size = 4) + ggtitle("Education")'}
-      width={width}
-      height={height}
-      margin={margin}
-      xTicks={xTickVals}
-      yTicks={labels}
-      xScale={xScale}
-      yScale={yScale}
-      formatX={v => String(Math.round(v))}
-      formatY={v => v}
-      xLabel="Year"
-      legend={legend}
-      tooltip={tooltip}
-    >
-      {items.map((e, i) => {
-        const cx = xScale(e.year)
-        const cy = yScale(e.label)
-        const color = colorMap[e.role]
-        const shapeIdx = shapeMap[e.org]
-        const shapeFn = SHAPES[shapeIdx]
-        return (
-          <g key={i}
-            onMouseEnter={() => setHoveredIdx(i)}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={() => setHoveredIdx(null)}
-            fill={color}
-            stroke={color}
-            opacity={hoveredIdx === null || hoveredIdx === i ? 1 : 0.4}
-          >
-            {/* lollipop stem */}
-            <line
-              x1={margin.left} x2={cx}
-              y1={cy} y2={cy}
+    <div ref={ref}>
+      <GGPanel
+        caption={'ggplot(education, aes(x = year, y = degree, color = degree, shape = institution)) + geom_point(size = 4) + ggtitle("Education")'}
+        width={width}
+        height={height}
+        margin={margin}
+        xTicks={xTickVals}
+        yTicks={labels}
+        xScale={xScale}
+        yScale={yScale}
+        formatX={v => String(Math.round(v))}
+        formatY={v => v}
+        xLabel="Year"
+        legend={legend}
+        tooltip={tooltip}
+      >
+        {items.map((e, i) => {
+          const cx = xScale(e.year)
+          const cy = yScale(e.label)
+          const color = colorMap[e.role]
+          const shapeIdx = shapeMap[e.org]
+          const shapeFn = SHAPES[shapeIdx]
+          return (
+            <g key={i}
+              onMouseEnter={() => setHoveredIdx(i)}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={() => setHoveredIdx(null)}
+              fill={color}
               stroke={color}
-              strokeWidth={2}
-              strokeDasharray="4,3"
-              opacity={hoveredIdx === null || hoveredIdx === i ? 0.5 : 0.15}
-            />
-            {/* degree point — shape encodes institution */}
-            <g>
-              {shapeFn(cx, cy, 8)}
+              opacity={hoveredIdx === null || hoveredIdx === i ? 1 : 0.4}
+            >
+              {/* lollipop stem */}
+              <line
+                x1={margin.left} x2={cx}
+                y1={cy} y2={cy}
+                stroke={color}
+                strokeWidth={2}
+                strokeDasharray="4,3"
+                opacity={hoveredIdx === null || hoveredIdx === i ? 0.5 : 0.15}
+              />
+              {/* degree point — shape encodes institution */}
+              <g>
+                {shapeFn(cx, cy, 8)}
+              </g>
             </g>
-          </g>
-        )
-      })}
-    </GGPanel>
+          )
+        })}
+      </GGPanel>
+    </div>
   )
 }
