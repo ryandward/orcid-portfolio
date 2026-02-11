@@ -70,14 +70,17 @@ export default function BiolumField({ active }) {
     const dpr = window.devicePixelRatio || 1
 
     let resizeTimer
+    let prevWidth = 0
     function resize() {
       const rect = canvas.getBoundingClientRect()
       canvas.width = rect.width * dpr
       canvas.height = rect.height * dpr
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       if (!sporesRef.current) {
+        prevWidth = rect.width
         initSpores(rect.width, rect.height)
-      } else {
+      } else if (Math.abs(rect.width - prevWidth) > 1) {
+        prevWidth = rect.width
         clearTimeout(resizeTimer)
         canvas.style.opacity = '0'
         resizeTimer = setTimeout(() => {
@@ -89,7 +92,7 @@ export default function BiolumField({ active }) {
     resize()
     window.addEventListener('resize', resize)
 
-    // Track mouse position relative to canvas
+    // Track pointer position relative to canvas (mouse + touch)
     function onMouseMove(e) {
       const rect = canvas.getBoundingClientRect()
       mouseRef.current = {
@@ -101,10 +104,26 @@ export default function BiolumField({ active }) {
     function onMouseLeave() {
       mouseRef.current = { ...mouseRef.current, active: false }
     }
+    function onTouchMove(e) {
+      if (e.touches.length > 0) {
+        const rect = canvas.getBoundingClientRect()
+        const touch = e.touches[0]
+        mouseRef.current = {
+          x: touch.clientX - rect.left,
+          y: touch.clientY - rect.top,
+          active: true,
+        }
+      }
+    }
+    function onTouchEnd() {
+      mouseRef.current = { ...mouseRef.current, active: false }
+    }
 
-    // Listen on document so the field responds to cursor anywhere on page
     document.addEventListener('mousemove', onMouseMove, { passive: true })
     document.addEventListener('mouseleave', onMouseLeave)
+    document.addEventListener('touchmove', onTouchMove, { passive: true })
+    document.addEventListener('touchend', onTouchEnd)
+    document.addEventListener('touchcancel', onTouchEnd)
 
     function draw() {
       const w = canvas.offsetWidth
@@ -213,6 +232,9 @@ export default function BiolumField({ active }) {
       window.removeEventListener('resize', resize)
       document.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mouseleave', onMouseLeave)
+      document.removeEventListener('touchmove', onTouchMove)
+      document.removeEventListener('touchend', onTouchEnd)
+      document.removeEventListener('touchcancel', onTouchEnd)
     }
   }, [active, initSpores])
 

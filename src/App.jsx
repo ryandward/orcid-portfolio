@@ -107,6 +107,21 @@ export default function App() {
     return () => els.forEach(el => { el.style.animationDelay = '' })
   }, [detailLevel])
 
+  // CRT noise seed cycling — JS-driven for Safari/WebKit compatibility.
+  // SMIL <animate> on feTurbulence seed doesn't work in WebKit, so we
+  // manually cycle the seed attribute at ~12fps for jittery noise.
+  useEffect(() => {
+    if (detailLevel !== 3) return
+    const turbs = document.querySelectorAll('[data-crt-turb]')
+    if (!turbs.length) return
+    let seed = 0
+    const id = setInterval(() => {
+      seed = (seed + 1) % 12
+      turbs.forEach(el => el.setAttribute('seed', seed))
+    }, 83) // ~12fps
+    return () => clearInterval(id)
+  }, [detailLevel])
+
   // Weyl equidistribution for Level 2 ambient detuning.
   // By Weyl's theorem, frac(n·√2) is equidistributed on [0,1].
   // Each element gets a unique duration, so oscillators drift in/out of
@@ -127,6 +142,31 @@ export default function App() {
 
   // Mouse proximity glow for level 2 cards
   useProximityGlow(detailLevel === 2)
+
+  // GCD-smart link grid: only break at factor-friendly column counts.
+  // Computes descending factors of n, picks the largest that fits the
+  // container width (min 180px per item). 6 links -> 6, 3, 2, 1.
+  const linksRef = useRef(null)
+  const [linkCols, setLinkCols] = useState(null)
+  useEffect(() => {
+    const el = linksRef.current
+    if (!el) return
+    const n = el.childElementCount
+    if (n <= 1) return
+    const factors = []
+    for (let c = n; c >= 1; c--) {
+      if (n % c === 0) factors.push(c)
+    }
+    const MIN_W = 180
+    const GAP = 12
+    const observer = new ResizeObserver(([entry]) => {
+      const w = entry.contentRect.width
+      const cols = factors.find(f => f * MIN_W + (f - 1) * GAP <= w) || 1
+      setLinkCols(cols)
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [loading])
 
   const SE_CACHE_KEY = 'se_cache_v4'
   const SE_CACHE_TTL = 60 * 60 * 1000 // 1 hour
@@ -276,22 +316,14 @@ export default function App() {
             <feDisplacementMap in="SourceGraphic" scale="170" />
           </filter>
           <filter id="crt-noise-lg" x="-5%" y="-5%" width="110%" height="110%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.015 0.8"
-              numOctaves="3" result="noise">
-              <animate attributeName="seed"
-                values="0;1;2;3;4;5;6;7;8;9;10;11"
-                dur="1s" calcMode="discrete" repeatCount="indefinite"/>
-            </feTurbulence>
+            <feTurbulence data-crt-turb="" type="fractalNoise" baseFrequency="0.015 0.8"
+              numOctaves="3" result="noise" seed="0"/>
             <feDisplacementMap in="SourceGraphic" in2="noise"
               scale="4" xChannelSelector="R" yChannelSelector="G"/>
           </filter>
           <filter id="crt-noise" x="-5%" y="-5%" width="110%" height="110%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.015 0.8"
-              numOctaves="3" result="noise">
-              <animate attributeName="seed"
-                values="0;1;2;3;4;5;6;7;8;9;10;11"
-                dur="1s" calcMode="discrete" repeatCount="indefinite"/>
-            </feTurbulence>
+            <feTurbulence data-crt-turb="" type="fractalNoise" baseFrequency="0.015 0.8"
+              numOctaves="3" result="noise" seed="0"/>
             <feDisplacementMap in="SourceGraphic" in2="noise"
               scale="2" xChannelSelector="R" yChannelSelector="G"/>
           </filter>
@@ -530,7 +562,7 @@ export default function App() {
             <h2 className="sec-title">Links</h2>
             <div className="sec-line"/>
           </div></Reveal>
-          <div className="links-list" style={{ gridTemplateColumns: `repeat(${allLinks.length % 3 === 0 ? 3 : allLinks.length % 2 === 0 ? 2 : 3}, 1fr)` }}>
+          <div ref={linksRef} className="links-list" style={linkCols ? { gridTemplateColumns: `repeat(${linkCols}, 1fr)` } : undefined}>
               {allLinks.map((l, i) => (
                 <Reveal key={i} delay={i * 60}>
                   <GlowCard className="lnk" href={l.url}>

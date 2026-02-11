@@ -595,7 +595,7 @@ body.detail-1 .snake-node.now { animation: none; box-shadow: none; }
 body.detail-1 {
   background: #000033;
   color: #FFFF00;
-  font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+  font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard SE', 'Marker Felt', cursive;
   line-height: 1.5;
   cursor: crosshair;
   background-image:
@@ -633,7 +633,7 @@ body.detail-1 .hero {
 body.detail-1 .hero-inner { text-align: center; }
 body.detail-1 .hero-prompt { color: #00FFFF; text-align: center; }
 body.detail-1 .hero-name {
-  font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+  font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard SE', 'Marker Felt', cursive;
 }
 body.detail-1 .hero-name-line {
   animation: none; opacity: 1;
@@ -687,7 +687,7 @@ body.detail-1 .hero-stats { animation: none; opacity: 1; justify-content: center
   text-align: center;
   color: #00FFFF;
   font-size: 0.7rem;
-  font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+  font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard SE', 'Marker Felt', cursive;
   padding: 0.5rem;
   border: 1px outset #808080;
   background: #000066;
@@ -702,14 +702,14 @@ body.detail-1 .nav {
 }
 body.detail-1 .nav-a {
   color: #FFFF00; text-decoration: none;
-  font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+  font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard SE', 'Marker Felt', cursive;
   text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.85rem;
   font-weight: bold;
 }
 body.detail-1 .nav-a:hover { color: #00FF00; }
 body.detail-1 .nav-a:hover::after { display: none; }
 body.detail-1 .nav-lvl {
-  font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+  font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard SE', 'Marker Felt', cursive;
   border: 2px outset #808080; color: #FFFF00;
   background: #000066;
 }
@@ -723,7 +723,7 @@ body.detail-1 .nav-lvl.active {
 body.detail-1 .section { max-width: none; }
 body.detail-1 .sec-head { justify-content: center; }
 body.detail-1 .sec-title {
-  font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+  font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard SE', 'Marker Felt', cursive;
   color: #00FFFF;
   font-size: 1.8rem;
   text-align: center;
@@ -735,7 +735,7 @@ body.detail-1 .sec-line {
 body.detail-1 .sec-count { color: #FFFF00; }
 body.detail-1 .sec-label {
   display: block;
-  font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+  font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard SE', 'Marker Felt', cursive;
   font-size: 3rem; font-weight: bold;
   color: #FFFF00;
 }
@@ -750,7 +750,7 @@ body.detail-1 .snake-card:hover {
 }
 body.detail-1 .snake-card:hover .snake-role { color: #00FF00; }
 body.detail-1 .snake-role {
-  font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+  font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard SE', 'Marker Felt', cursive;
   color: #FFFFFF;
 }
 body.detail-1 .snake-org { color: #FF00FF; }
@@ -775,11 +775,11 @@ body.detail-1 .pub-card:hover {
 }
 body.detail-1 .pub-card:hover .pub-year { text-shadow: none; }
 body.detail-1 .pub-year {
-  font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+  font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard SE', 'Marker Felt', cursive;
   color: #00FF00;
 }
 body.detail-1 .pub-title {
-  font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+  font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard SE', 'Marker Felt', cursive;
   color: #FFFFFF;
 }
 body.detail-1 .pub-type {
@@ -803,7 +803,7 @@ body.detail-1 .glow-card:hover {
 /* Keywords */
 body.detail-1 .kw {
   border: 2px outset #808080; color: #00FF00; border-radius: 0;
-  font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+  font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard SE', 'Marker Felt', cursive;
   background: #000066;
 }
 body.detail-1 .kw:hover {
@@ -823,16 +823,16 @@ body.detail-1 .se-card:hover {
 }
 body.detail-1 .se-score {
   color: #00FF00;
-  font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+  font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard SE', 'Marker Felt', cursive;
 }
 body.detail-1 .se-card:hover .se-score { text-shadow: none; }
 body.detail-1 .se-title {
   color: #FFFFFF;
-  font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+  font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard SE', 'Marker Felt', cursive;
 }
 body.detail-1 .se-site-name {
   color: #FF00FF;
-  font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+  font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard SE', 'Marker Felt', cursive;
 }
 body.detail-1 .se-site-rep {
   color: #FFFF00; background: #000099;
@@ -846,7 +846,7 @@ body.detail-1 .se-card:hover .se-tag {
   color: #FFFF00; background: #000066; border-style: inset;
 }
 body.detail-1 .se-type-badge {
-  font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+  font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard SE', 'Marker Felt', cursive;
 }
 body.detail-1 .se-type-q {
   background: #000099; color: #00FFFF; border: 2px outset #808080;
@@ -904,7 +904,7 @@ body.detail-1 .stat--id:hover { background: #000066; border-style: inset; }
 /* Toast */
 body.detail-1 .detail-toast {
   background: #000066; border: 2px outset #808080; color: #FFFF00;
-  font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+  font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard SE', 'Marker Felt', cursive;
 }
 
 /* Scrollbar */
