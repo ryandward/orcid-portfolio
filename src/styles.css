@@ -737,57 +737,54 @@ body.detail-3 .hero-grid { display: none; }
   25%, 55% { opacity: 1; }
 }
 
-/* Single CRT flicker — pink flares up, splitting into chromatic aberration.
-   Use --crt-move: 1 on elements that should also get spatial displacement. */
-@keyframes crtFlicker {
-  0%       { opacity: 1; transform: none; text-shadow: 0 0 0.05em var(--accent), 0 0 0.15em rgba(255,0,110,0.3), -0.02em 0 0 rgba(255,0,110,0.2), 0.02em 0 0 rgba(0,212,255,0.1); }
-  1.5%     { opacity: 1; transform: none; text-shadow: 0 0 0.15em var(--accent), 0 0 0.5em rgba(255,0,110,0.6), -0.02em 0 0 rgba(255,0,110,0.4), 0.01em 0 0 rgba(0,212,255,0.08); }
-  2%       { opacity: 0.4; transform: translate(calc(0.05em * var(--crt-move, 0)), 0) skewX(calc(-3deg * var(--crt-move, 0))); text-shadow: -0.1em 0 rgba(255,0,110,0.9), 0.05em 0 rgba(0,212,255,0.25), 0 0 0.6em rgba(255,0,110,0.5), 0 0 1.2em rgba(255,0,110,0.2); }
-  3%       { opacity: 1; transform: translate(calc(-0.03em * var(--crt-move, 0)), calc(0.01em * var(--crt-move, 0))); text-shadow: -0.07em 0 rgba(255,0,110,0.7), 0.04em 0 rgba(0,212,255,0.2), 0 0 0.3em rgba(255,0,110,0.4); }
-  4%       { opacity: 0.7; transform: translate(calc(0.04em * var(--crt-move, 0)), calc(-0.01em * var(--crt-move, 0))) skewX(calc(2deg * var(--crt-move, 0))); text-shadow: -0.04em 0 rgba(255,0,110,0.5), 0.03em 0 rgba(0,212,255,0.15), 0 0 0.4em rgba(255,0,110,0.3); }
-  5%       { opacity: 1; transform: none; text-shadow: 0 0 0.05em var(--accent), 0 0 0.15em rgba(255,0,110,0.3), -0.02em 0 0 rgba(255,0,110,0.2), 0.02em 0 0 rgba(0,212,255,0.1); }
-  30%      { opacity: 1; transform: none; }
-  30.5%    { opacity: 1; transform: none; text-shadow: 0 0 0.2em var(--accent), 0 0 0.6em rgba(255,0,110,0.5), -0.02em 0 0 rgba(255,0,110,0.4), 0.01em 0 0 rgba(0,212,255,0.08); }
-  31%      { opacity: 0; transform: translate(calc(-0.08em * var(--crt-move, 0)), calc(0.03em * var(--crt-move, 0))) skewX(calc(-5deg * var(--crt-move, 0))); }
-  32%      { opacity: 1; transform: translate(calc(0.04em * var(--crt-move, 0)), calc(-0.01em * var(--crt-move, 0))) skewX(calc(2deg * var(--crt-move, 0))); text-shadow: -0.1em 0 rgba(255,0,110,0.9), 0.06em 0 rgba(0,212,255,0.25), 0 0 1em rgba(255,0,110,0.6), 0 0 2em rgba(255,0,110,0.2); }
-  33%      { opacity: 0.6; transform: translate(calc(-0.03em * var(--crt-move, 0)), 0); text-shadow: -0.06em 0 rgba(255,0,110,0.6), 0.04em 0 rgba(0,212,255,0.2), 0 0 0.3em rgba(255,0,110,0.4); }
-  34%      { opacity: 1; transform: none; text-shadow: 0 0 0.05em var(--accent), 0 0 0.15em rgba(255,0,110,0.3), -0.02em 0 0 rgba(255,0,110,0.2), 0.02em 0 0 rgba(0,212,255,0.1); }
-  65%      { opacity: 1; transform: none; }
-  65.5%    { opacity: 1; transform: none; text-shadow: 0 0 0.15em var(--accent), 0 0 0.6em rgba(255,0,110,0.5), -0.02em 0 0 rgba(255,0,110,0.4), 0.01em 0 0 rgba(0,212,255,0.08); }
-  66%      { opacity: 0.3; transform: translate(calc(0.06em * var(--crt-move, 0)), calc(-0.03em * var(--crt-move, 0))) skewX(calc(4deg * var(--crt-move, 0))); text-shadow: -0.14em 0 rgba(255,0,110,0.85), 0.07em 0 rgba(0,212,255,0.2), 0 0 0.7em rgba(255,0,110,0.5), 0 0 1.5em rgba(255,0,110,0.2); }
-  67%      { opacity: 0.9; transform: translate(calc(-0.04em * var(--crt-move, 0)), calc(0.01em * var(--crt-move, 0))) skewX(calc(-2deg * var(--crt-move, 0))); text-shadow: -0.08em 0 rgba(255,0,110,0.6), 0.04em 0 rgba(0,212,255,0.15), 0 0 0.2em rgba(255,0,110,0.3); }
-  68%      { opacity: 0.5; transform: translate(calc(0.03em * var(--crt-move, 0)), 0); }
-  69%      { opacity: 1; transform: none; text-shadow: 0 0 0.05em var(--accent), 0 0 0.15em rgba(255,0,110,0.3), -0.02em 0 0 rgba(255,0,110,0.2), 0.02em 0 0 rgba(0,212,255,0.1); }
-  100%     { opacity: 1; transform: none; }
+/* CRT flicker — two independent layers whose duration ratio is φ (golden ratio).
+   φ ≈ 1.618 is the "most irrational" number: its continued fraction [1;1,1,1,...]
+   converges slower than any other, so these oscillators take the longest possible
+   time to near-sync (~96s before a close alignment). Phase offsets for always-on
+   elements use the R₂ low-discrepancy sequence (plastic constant) — see App.jsx. */
+
+/* Layer 1: Power sag — tube loses charge after surges */
+@keyframes crtDim {
+  0%, 18%, 52%, 75%, 100% { opacity: 1; }
+  4%    { opacity: 0.35; }
+  7%    { opacity: 0.25; }
+  12%   { opacity: 0.6; }
+  56%   { opacity: 0.3; }
+  60%   { opacity: 0.25; }
+  68%   { opacity: 0.65; }
 }
 
-/* Card CRT glitch — full-width horizontal band displacement on hover */
-@keyframes cardGlitch {
-  0%    { clip-path: inset(100% 0 0 0); transform: none; background: transparent; }
-  3%    { clip-path: inset(10% 0 60% 0); transform: translateX(8px); background: rgba(255,255,255,0.5); }
-  4%    { clip-path: inset(58% 0 8% 0); transform: translateX(-12px); background: rgba(255,255,255,0.25); }
-  5%    { clip-path: inset(38% 0 42% 0); transform: translateX(5px); background: rgba(255,255,255,0.4); }
-  6.5%  { clip-path: inset(100% 0 0 0); transform: none; background: transparent; }
-  18%   { clip-path: inset(100% 0 0 0); transform: none; background: transparent; }
-  19%   { clip-path: inset(6% 0 74% 0); transform: translateX(-8px); background: rgba(255,255,255,0.5); }
-  20%   { clip-path: inset(72% 0 5% 0); transform: translateX(10px); background: rgba(255,255,255,0.15); }
-  21%   { clip-path: inset(100% 0 0 0); transform: none; background: transparent; }
-  35%   { clip-path: inset(100% 0 0 0); transform: none; background: transparent; }
-  36%   { clip-path: inset(28% 0 42% 0); transform: translateX(14px); background: rgba(255,255,255,0.35); }
-  37%   { clip-path: inset(100% 0 0 0); transform: none; background: transparent; }
-  50%   { clip-path: inset(100% 0 0 0); transform: none; background: transparent; }
-  51%   { clip-path: inset(4% 0 82% 0); transform: translateX(-6px); background: rgba(255,255,255,0.2); }
-  52%   { clip-path: inset(52% 0 18% 0); transform: translateX(8px); background: rgba(255,255,255,0.5); }
-  53%   { clip-path: inset(100% 0 0 0); transform: none; background: transparent; }
-  68%   { clip-path: inset(100% 0 0 0); transform: none; background: transparent; }
-  69%   { clip-path: inset(15% 0 62% 0); transform: translateX(-10px); background: rgba(255,255,255,0.3); }
-  70%   { clip-path: inset(64% 0 10% 0); transform: translateX(6px); background: rgba(255,255,255,0.12); }
-  71%   { clip-path: inset(100% 0 0 0); transform: none; background: transparent; }
-  85%   { clip-path: inset(100% 0 0 0); transform: none; background: transparent; }
-  86%   { clip-path: inset(44% 0 34% 0); transform: translateX(-14px); background: rgba(255,255,255,0.45); }
-  87%   { clip-path: inset(100% 0 0 0); transform: none; background: transparent; }
-  100%  { clip-path: inset(100% 0 0 0); transform: none; background: transparent; }
+/* Layer 2: Chromatic split — pink flares left, cyan reacts right */
+@keyframes crtSplit {
+  0%, 14%, 30%, 70%, 88%, 100% {
+    text-shadow: 0 0 0.05em var(--accent), 0 0 0.15em rgba(255,0,110,0.3),
+      -0.02em 0 0 rgba(255,0,110,0.2), 0.03em 0 0 rgba(0,212,255,0.3);
+  }
+  7%  { text-shadow: 0 0 0.15em var(--accent), 0 0 0.5em rgba(255,0,110,0.6),
+      -0.03em 0 0 rgba(255,0,110,0.5), 0.02em 0 0 rgba(0,212,255,0.2); }
+  9%  { text-shadow: -0.1em 0 rgba(255,0,110,0.9), 0.07em 0 rgba(0,212,255,0.5),
+      0 0 0.6em rgba(255,0,110,0.5), 0 0 0.3em rgba(0,212,255,0.15); }
+  11% { text-shadow: -0.06em 0 rgba(255,0,110,0.6), 0.04em 0 rgba(0,212,255,0.35),
+      0 0 0.3em rgba(255,0,110,0.3); }
+  17% { text-shadow: none; }
+  22% { text-shadow: 0 0 0.02em var(--accent); }
+  62% { text-shadow: 0 0 0.2em var(--accent), 0 0 0.6em rgba(255,0,110,0.5),
+      -0.03em 0 0 rgba(255,0,110,0.5), 0.02em 0 0 rgba(0,212,255,0.2); }
+  64% { text-shadow: -0.14em 0 rgba(255,0,110,0.85), 0.09em 0 rgba(0,212,255,0.45),
+      0 0 0.7em rgba(255,0,110,0.5), 0 0 0.3em rgba(0,212,255,0.15); }
+  66% { text-shadow: -0.08em 0 rgba(255,0,110,0.6), 0.05em 0 rgba(0,212,255,0.35),
+      0 0 0.2em rgba(255,0,110,0.3); }
+  73% { text-shadow: none; }
+  80% { text-shadow: 0 0 0.02em var(--accent); }
 }
+
+
+/* Card CRT glitch — full-width horizontal band displacement on hover */
+/* Cathode noise — SVG feTurbulence displacement filter (see App.jsx #crt-noise).
+   Ken Perlin's gradient noise generates fractal Brownian motion (fBm) that warps
+   card pixels horizontally, exactly like real CRT signal interference. Asymmetric
+   baseFrequency (low X, high Y) creates coherent horizontal banding per scan line.
+   The seed attribute cycles discretely for jittery, non-repeating pattern changes. */
 
 /* Body — elegant serif that technology keeps breaking */
 body.detail-3 {
@@ -872,8 +869,8 @@ body.detail-3 .hero-name-line.accent {
     0 0 1em rgba(255,0,110,0.2),
     -0.03em 0 0 rgba(255,0,110,0.3),
     0.03em 0 0 rgba(0,212,255,0.3);
-  --crt-move: 1;
-  animation: crtFlicker 4s ease-in-out infinite;
+
+  animation: crtDim 4s ease-in-out infinite, crtSplit 6.472s ease-in-out infinite;
 }
 body.detail-3 .hero-bio {
   animation: none; opacity: 1;
@@ -910,23 +907,11 @@ body.detail-3 .nav-a {
 }
 body.detail-3 .nav-a:is(:hover,.th) {
   color: var(--accent);
-  animation: crtFlicker 4s ease-in-out infinite;
+  animation: crtDim 4s ease-in-out infinite, crtSplit 6.472s ease-in-out infinite;
 }
 body.detail-3 .nav-a:is(:hover,.th)::after {
   background: linear-gradient(90deg, rgba(255,0,110,0.6), rgba(0,212,255,0.6));
   box-shadow: none;
-}
-body.detail-3 .nav-a::before {
-  content: '';
-  display: block;
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 10;
-  clip-path: inset(100% 0 0 0);
-}
-body.detail-3 .nav-a:is(:hover,.th)::before {
-  animation: cardGlitch 3s steps(1) infinite;
 }
 body.detail-3 .nav-lvl {
   font-family: 'Syne', sans-serif;
@@ -984,7 +969,7 @@ body.detail-3 .snake-card:is(:hover,.th) {
 }
 body.detail-3 .snake-card:is(:hover,.th) .snake-role {
   color: var(--accent);
-  animation: crtFlicker 4s ease-in-out infinite;
+  animation: crtDim 4s ease-in-out infinite, crtSplit 6.472s ease-in-out infinite;
 }
 body.detail-3 .snake-card:is(:hover,.th) .snake-dates { color: #999; }
 body.detail-3 .snake-role {
@@ -992,7 +977,7 @@ body.detail-3 .snake-role {
   text-transform: none; letter-spacing: 0;
   color: #000;
 }
-body.detail-3 .snake-org { color: var(--accent); font-weight: 700; }
+body.detail-3 .snake-org { color: #3A3330; font-weight: 600; }
 body.detail-3 .snake-dates { color: #999; }
 body.detail-3 .snake-dept { color: #666; }
 body.detail-3 .snake-node { border-color: #000; background: var(--bg); }
@@ -1017,7 +1002,7 @@ body.detail-3 .pub-year {
 }
 body.detail-3 .pub-year::before { display: none; }
 body.detail-3 .pub-card:is(:hover,.th) .pub-year {
-  animation: crtFlicker 4s ease-in-out infinite;
+  animation: crtDim 4s ease-in-out infinite, crtSplit 6.472s ease-in-out infinite;
 }
 body.detail-3 .pub-title {
   font-family: Georgia, 'Times New Roman', serif;
@@ -1058,24 +1043,14 @@ body.detail-3 .lnk:is(:hover,.th) {
   box-shadow: -0.15em 0 0 rgba(255,0,110,0.3), 0.15em 0 0 rgba(0,212,255,0.3);
 }
 
-/* CRT glitch pseudo-element — horizontal band overlay spanning card width */
-body.detail-3 .snake-card::after,
-body.detail-3 .pub-card::after,
-body.detail-3 .se-card::after,
-body.detail-3 .lnk::after {
-  content: '';
-  display: block;
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 10;
-  clip-path: inset(100% 0 0 0);
-}
-body.detail-3 .snake-card:is(:hover,.th)::after,
-body.detail-3 .pub-card:is(:hover,.th)::after,
-body.detail-3 .se-card:is(:hover,.th)::after,
-body.detail-3 .lnk:is(:hover,.th)::after {
-  animation: cardGlitch 3s steps(1) infinite;
+/* CRT displacement noise on hover — applied via SVG filter */
+body.detail-3 .snake-card:is(:hover,.th),
+body.detail-3 .pub-card:is(:hover,.th),
+body.detail-3 .se-card:is(:hover,.th),
+body.detail-3 .lnk:is(:hover,.th),
+body.detail-3 .kw:is(:hover,.th),
+body.detail-3 .nav-a:is(:hover,.th) {
+  filter: url(#crt-noise);
 }
 
 /* CRT scanline overlay — card becomes a monitor on hover */
@@ -1128,19 +1103,7 @@ body.detail-3 .kw {
 body.detail-3 .kw:is(:hover,.th) {
   background: transparent; color: var(--accent);
   border-color: #000;
-  animation: crtFlicker 4s ease-in-out infinite;
-}
-body.detail-3 .kw::after {
-  content: '';
-  display: block;
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 10;
-  clip-path: inset(100% 0 0 0);
-}
-body.detail-3 .kw:is(:hover,.th)::after {
-  animation: cardGlitch 3s steps(1) infinite;
+  animation: crtDim 4s ease-in-out infinite, crtSplit 6.472s ease-in-out infinite;
 }
 
 /* SE cards — minimal with left accent */
@@ -1155,7 +1118,7 @@ body.detail-3 .se-card:is(:hover,.th) {
 }
 body.detail-3 .se-score { color: var(--accent); }
 body.detail-3 .se-card:is(:hover,.th) .se-score {
-  animation: crtFlicker 4s ease-in-out infinite;
+  animation: crtDim 4s ease-in-out infinite, crtSplit 6.472s ease-in-out infinite;
 }
 body.detail-3 .se-title {
   font-family: Georgia, 'Times New Roman', serif;

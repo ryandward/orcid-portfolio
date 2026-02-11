@@ -77,6 +77,28 @@ export default function App() {
     }
   }, [detailLevel])
 
+  // R₂ low-discrepancy sequence for CRT phase distribution.
+  // The plastic constant p ≈ 1.3247 (real root of p³ = p + 1) generates
+  // the optimal 2D quasi-random sequence: offset_n = (n/p mod 1, n/p² mod 1).
+  // Each always-on element gets a unique (dim, split) phase pair that fills
+  // the 2D phase space as uniformly as possible — no clumping, no gaps.
+  useEffect(() => {
+    if (detailLevel !== 3) return
+    const PHI = (1 + Math.sqrt(5)) / 2
+    const PLASTIC = 1.32471795724474602596
+    const DIM_DUR = 4
+    const SPLIT_DUR = DIM_DUR * PHI
+    const els = document.querySelectorAll('.hero-name-line.accent, .kw')
+    els.forEach((el, i) => {
+      const n = i + 1
+      const r2_dim   = (n / PLASTIC) % 1
+      const r2_split = (n / (PLASTIC * PLASTIC)) % 1
+      el.style.animationDelay =
+        `${-(r2_dim * DIM_DUR).toFixed(3)}s, ${-(r2_split * SPLIT_DUR).toFixed(3)}s`
+    })
+    return () => els.forEach(el => { el.style.animationDelay = '' })
+  }, [detailLevel])
+
   const SE_CACHE_KEY = 'se_cache_v3'
   const SE_CACHE_TTL = 60 * 60 * 1000 // 1 hour
 
@@ -213,6 +235,25 @@ export default function App() {
 
   return (
     <div className="portfolio">
+      {/* SVG feTurbulence displacement filter for CRT cathode noise.
+          Perlin gradient noise (1983) generates fractal Brownian motion;
+          asymmetric baseFrequency (low X=0.015, high Y=0.8) creates coherent
+          horizontal banding per scan line. Seed cycles discretely at ~12fps
+          for jittery, non-interpolated pattern changes. */}
+      <svg style={{ position: 'absolute', width: 0, height: 0 }} aria-hidden="true">
+        <defs>
+          <filter id="crt-noise" x="-5%" y="-5%" width="110%" height="110%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.015 0.8"
+              numOctaves="3" result="noise">
+              <animate attributeName="seed"
+                values="0;1;2;3;4;5;6;7;8;9;10;11"
+                dur="1s" calcMode="discrete" repeatCount="indefinite"/>
+            </feTurbulence>
+            <feDisplacementMap in="SourceGraphic" in2="noise"
+              scale="2" xChannelSelector="R" yChannelSelector="G"/>
+          </filter>
+        </defs>
+      </svg>
       <header className="hero">
         <div className="hero-bg"/>
         <div className="hero-grid" style={{ transform: `translateY(${scrollY * [0, 0, 0.12, 0.25][detailLevel]}px)` }}/>
