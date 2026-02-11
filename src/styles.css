@@ -214,7 +214,6 @@ body {
   max-width: 880px; margin: 0 auto;
   display: flex; flex-wrap: wrap; justify-content: center; gap: 0; scrollbar-width: none;
 }
-.nav-group { display: flex; }
 .nav-inner::-webkit-scrollbar { display: none; }
 .nav-a {
   font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;

@@ -9,6 +9,7 @@ import BiolumField from './components/BiolumField'
 import Reveal from './components/Reveal'
 import GlowCard from './components/GlowCard'
 import useProximityGlow from './hooks/useProximityGlow'
+import useGcdGrid from './hooks/useGcdGrid'
 import SnakeTimeline from './components/SnakeTimeline'
 import StackExchangeSection from './components/StackExchangeSection'
 import GGExperience from './components/ggplot/GGExperience'
@@ -147,30 +148,9 @@ export default function App() {
   // Mouse proximity glow for level 2 cards
   useProximityGlow(detailLevel === 2)
 
-  // GCD-smart link grid: only break at factor-friendly column counts.
-  // Computes descending factors of n, picks the largest that fits the
-  // container width (min 180px per item). 6 links -> 6, 3, 2, 1.
-  const linksRef = useRef(null)
-  const [linkCols, setLinkCols] = useState(null)
-  useEffect(() => {
-    const el = linksRef.current
-    if (!el) return
-    const n = el.childElementCount
-    if (n <= 1) return
-    const factors = []
-    for (let c = n; c >= 1; c--) {
-      if (n % c === 0) factors.push(c)
-    }
-    const MIN_W = 140
-    const GAP = 12
-    const observer = new ResizeObserver(([entry]) => {
-      const w = entry.contentRect.width
-      const cols = factors.find(f => f * MIN_W + (f - 1) * GAP <= w) || 1
-      setLinkCols(cols)
-    })
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [loading])
+  // GCD-smart grids for nav + links
+  const [navRef, navCols] = useGcdGrid(80, 0, loading)
+  const [linksRef, linkCols] = useGcdGrid(140, 12, loading)
 
   const SE_CACHE_KEY = 'se_cache_v4'
   const SE_CACHE_TTL = 60 * 60 * 1000 // 1 hour
@@ -426,17 +406,13 @@ export default function App() {
       </header></SmoothResize>
 
       <nav className={`nav ${scrollY > 60 ? 'nav--scrolled' : ''}`}>
-        <div className="nav-inner">
-          <div className="nav-group">
-            <a className="nav-a" href="#xp">Experience</a>
-            <a className="nav-a" href="#edu">Education</a>
-            <a className="nav-a" href="#pub">Publications</a>
-          </div>
-          <div className="nav-group">
-            {seData.length > 0 && <a className="nav-a" href="#se">Stack Exchange</a>}
-            {allKeywords.length > 0 && <a className="nav-a" href="#kw">Skills</a>}
-            {allLinks.length > 0 && <a className="nav-a" href="#links">Links</a>}
-          </div>
+        <div ref={navRef} className="nav-inner" style={navCols ? { display: 'grid', gridTemplateColumns: `repeat(${navCols}, auto)`, justifyContent: 'center' } : undefined}>
+          <a className="nav-a" href="#xp">Experience</a>
+          <a className="nav-a" href="#edu">Education</a>
+          <a className="nav-a" href="#pub">Publications</a>
+          {seData.length > 0 && <a className="nav-a" href="#se">Stack Exchange</a>}
+          {allKeywords.length > 0 && <a className="nav-a" href="#kw">Skills</a>}
+          {allLinks.length > 0 && <a className="nav-a" href="#links">Links</a>}
         </div>
         <div className="nav-levels">
           {[1, 2, 3, 4].map(n => (
