@@ -238,8 +238,8 @@ body {
 
 /* Nav level switcher */
 .nav-levels {
-  display: flex; align-items: center; gap: 2px;
-  margin-left: auto; padding: 0 0.5rem;
+  display: flex; align-items: center; justify-content: center; gap: 2px;
+  padding: 0.25rem 0;
 }
 .nav-lvl {
   width: 22px; height: 22px;

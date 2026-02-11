@@ -334,11 +334,11 @@ export default function App() {
           {seData.length > 0 && <a className="nav-a" href="#se">Stack Exchange</a>}
           {allKeywords.length > 0 && <a className="nav-a" href="#kw">Skills</a>}
           {allLinks.length > 0 && <a className="nav-a" href="#links">Links</a>}
-          <div className="nav-levels">
-            {[1, 2, 3, 4].map(n => (
-              <button key={n} className={`nav-lvl${detailLevel === n ? ' active' : ''}`} onClick={() => setDetailLevel(n)}>{n}</button>
-            ))}
-          </div>
+        </div>
+        <div className="nav-levels">
+          {[1, 2, 3, 4].map(n => (
+            <button key={n} className={`nav-lvl${detailLevel === n ? ' active' : ''}`} onClick={() => setDetailLevel(n)}>{n}</button>
+          ))}
         </div>
       </nav>
 
