@@ -26,7 +26,7 @@ body.detail-1 {
 }
 body.detail-2 {
   --reveal-duration: 0.6s; --reveal-ease: cubic-bezier(0.16,1,0.3,1);
-  --hover-lift: -2px; --glow-mult: 1;
+  --hover-lift: 0px; --glow-mult: 1;
 }
 body.detail-3 {
   --reveal-duration: 0.4s; --reveal-ease: cubic-bezier(0.16,1,0.3,1);
@@ -984,28 +984,11 @@ body.detail-2 .hero-bg {
   animation: heroGlowDrift 22s ease-in-out infinite;
 }
 
-/* Hero name — clean spectral shift, cyan donor → green acceptor */
-@keyframes heroNameBreathe {
-  0%, 100% {
-    color: var(--accent);
-    text-shadow: 0 0 20px rgba(0,255,136,0.08), 0 0 60px rgba(0,255,136,0.03);
-    filter: drop-shadow(0 0 8px rgba(0,212,255,0.05));
-  }
-  35% {
-    color: #00D4FF;
-    text-shadow: 0 0 30px rgba(0,212,255,0.20), 0 0 80px rgba(0,212,255,0.06);
-    filter: drop-shadow(0 0 16px rgba(0,212,255,0.12));
-  }
-  65% {
-    color: #00E8A0;
-    text-shadow: 0 0 25px rgba(0,255,136,0.15), 0 0 60px rgba(0,255,136,0.05);
-    filter: drop-shadow(0 0 12px rgba(0,255,136,0.08));
-  }
-}
+/* Hero name — bretText (color + text-shadow only, no box-shadow rectangle) at meditative 8s */
 body.detail-2 .hero-name-line.accent {
   animation:
     nameReveal 0.7s cubic-bezier(0.16,1,0.3,1) forwards,
-    heroNameBreathe 8s ease-in-out 0.7s infinite;
+    bretText 8s ease-in-out 0.7s infinite;
 }
 
 /* ── Snake track — flowing vein ── */
@@ -1015,13 +998,13 @@ body.detail-2 .hero-name-line.accent {
 }
 body.detail-2 .snake-track::before {
   background: linear-gradient(to bottom,
-    rgba(0,255,136,0.35), rgba(0,212,255,0.20), rgba(0,255,136,0.35));
+    rgba(0,255,136,0.50), rgba(0,212,255,0.30), rgba(0,255,136,0.50));
   background-size: 100% 200%;
-  animation: trackFlow 6s ease-in-out infinite;
+  animation: trackFlow 5s ease-in-out infinite;
 }
 body.detail-2 .snake-track::after {
   background: linear-gradient(to right,
-    rgba(0,255,136,0.25), rgba(0,212,255,0.15));
+    rgba(0,255,136,0.40), rgba(0,212,255,0.25));
 }
 
 /* ── Proximity glow — shared system for all interactive cards ── */
@@ -1037,93 +1020,99 @@ body.detail-2 .kw {
   --prox-x: 50%;
   --prox-y: 50%;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
-/* Card border + shadow respond to proximity via JS-set --prox */
+/* No CSS transitions on box-shadow/border-color — the JS rAF loop provides
+   smooth proximity updates per-frame, and CSS animations own hover state.
+   Transitions fight both systems. */
 body.detail-2 .snake-card,
 body.detail-2 .pub-card,
 body.detail-2 .se-card,
-body.detail-2 .lnk {
-  transition: border-color 0.5s ease-out, box-shadow 0.5s ease-out;
-}
-
+body.detail-2 .lnk,
 body.detail-2 .kw {
-  transition: border-color 0.5s ease-out, box-shadow 0.5s ease-out, color 0.5s ease-out;
+  transition: none;
 }
 
 /* ── Hover / touch-hover: full activation ── */
-/* When directly hovered, add the enzymatic pulse animation ON TOP of proximity.
-   Phase offsets come from --bio-phase (set by JS hook, Weyl-distributed). */
+/* Phase offsets come from --bio-phase (set by JS hook, Weyl-distributed). */
 
-@keyframes bioBreatheCyan {
-  0%, 100% { box-shadow: 0 0 8px rgba(0,212,255,0.04), 0 0 20px rgba(0,212,255,0.02); }
-  15%      { box-shadow: 0 0 18px rgba(0,212,255,0.12), 0 0 40px rgba(0,212,255,0.05); }
-  35%      { box-shadow: 0 0 12px rgba(0,212,255,0.08), 0 0 28px rgba(0,212,255,0.03); }
+/* ── BRET keyframes ──
+   Colors are computed at runtime by useProximityGlow via FRET additive superposition:
+     --cyan-rgb / --accent-rgb  = donor / acceptor (parsed from --cyan, --accent)
+     --bret-50-rgb              = 50% FRET: 0.5·donor + 0.5·acceptor
+     --bret-90-rgb              = 90% FRET: 0.1·donor + 0.9·acceptor
+     --bret-90r-rgb             = 90% reversed: 0.1·acceptor + 0.9·donor
+
+   Three property groups per species, shared keyframe timing (0/15/25/35%):
+     bretGlow:   box-shadow        — card-level radiant field
+     bretText:   color+text-shadow — text-level spectral cascade + radiating halo
+     bretFilter: filter            — acceptor re-emission (Euler-ratio delayed) */
+
+/* ── Cyan donor species ── */
+@keyframes bretGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(var(--cyan-rgb),0.15), 0 0 50px rgba(var(--cyan-rgb),0.08); }
+  15%      { box-shadow: 0 0 60px rgba(var(--cyan-rgb),0.50), 0 0 120px rgba(var(--cyan-rgb),0.25); }
+  25%      { box-shadow: 0 0 50px rgba(var(--bret-50-rgb),0.35), 0 0 100px rgba(var(--bret-50-rgb),0.18); }
+  35%      { box-shadow: 0 0 40px rgba(var(--bret-90-rgb),0.30), 0 0 80px rgba(var(--bret-90-rgb),0.15); }
 }
-@keyframes bioBreatheGreen {
-  0%, 100% { filter: drop-shadow(0 0 6px rgba(0,255,136,0.02)); }
-  25%      { filter: drop-shadow(0 0 14px rgba(0,255,136,0.10)); }
-  50%      { filter: drop-shadow(0 0 10px rgba(0,255,136,0.06)); }
+@keyframes bretText {
+  0%, 100% { color: rgb(var(--cyan-rgb)); text-shadow: 0 0 8px rgba(var(--cyan-rgb),0.15), 0 0 20px rgba(var(--cyan-rgb),0.08); }
+  15%      { color: rgb(var(--cyan-rgb)); text-shadow: 0 0 20px rgba(var(--cyan-rgb),0.50), 0 0 50px rgba(var(--cyan-rgb),0.20), 0 0 80px rgba(var(--cyan-rgb),0.08); }
+  25%      { color: rgb(var(--bret-50-rgb)); text-shadow: 0 0 16px rgba(var(--bret-50-rgb),0.40), 0 0 40px rgba(var(--bret-50-rgb),0.15), 0 0 70px rgba(var(--bret-50-rgb),0.06); }
+  35%      { color: rgb(var(--bret-90-rgb)); text-shadow: 0 0 14px rgba(var(--bret-90-rgb),0.35), 0 0 35px rgba(var(--bret-90-rgb),0.15), 0 0 60px rgba(var(--bret-90-rgb),0.06); }
+}
+@keyframes bretFilter {
+  0%, 100% { filter: drop-shadow(0 0 15px rgba(var(--accent-rgb),0.10)); }
+  25%      { filter: drop-shadow(0 0 50px rgba(var(--accent-rgb),0.40)); }
+  50%      { filter: drop-shadow(0 0 35px rgba(var(--accent-rgb),0.25)); }
 }
 
+/* ── Green donor species (SE cards — reversed) ── */
+@keyframes bretGlowRev {
+  0%, 100% { box-shadow: 0 0 20px rgba(var(--accent-rgb),0.15), 0 0 50px rgba(var(--accent-rgb),0.08); }
+  15%      { box-shadow: 0 0 60px rgba(var(--accent-rgb),0.50), 0 0 120px rgba(var(--accent-rgb),0.25); }
+  25%      { box-shadow: 0 0 50px rgba(var(--bret-50-rgb),0.35), 0 0 100px rgba(var(--bret-50-rgb),0.18); }
+  35%      { box-shadow: 0 0 40px rgba(var(--bret-90r-rgb),0.30), 0 0 80px rgba(var(--bret-90r-rgb),0.15); }
+}
+@keyframes bretTextRev {
+  0%, 100% { color: rgb(var(--accent-rgb)); text-shadow: 0 0 8px rgba(var(--accent-rgb),0.15), 0 0 20px rgba(var(--accent-rgb),0.08); }
+  15%      { color: rgb(var(--accent-rgb)); text-shadow: 0 0 20px rgba(var(--accent-rgb),0.50), 0 0 50px rgba(var(--accent-rgb),0.20), 0 0 80px rgba(var(--accent-rgb),0.08); }
+  25%      { color: rgb(var(--bret-50-rgb)); text-shadow: 0 0 16px rgba(var(--bret-50-rgb),0.40), 0 0 40px rgba(var(--bret-50-rgb),0.15), 0 0 70px rgba(var(--bret-50-rgb),0.06); }
+  35%      { color: rgb(var(--bret-90r-rgb)); text-shadow: 0 0 14px rgba(var(--bret-90r-rgb),0.35), 0 0 35px rgba(var(--bret-90r-rgb),0.15), 0 0 60px rgba(var(--bret-90r-rgb),0.06); }
+}
+@keyframes bretFilterRev {
+  0%, 100% { filter: drop-shadow(0 0 15px rgba(var(--cyan-rgb),0.10)); }
+  25%      { filter: drop-shadow(0 0 50px rgba(var(--cyan-rgb),0.40)); }
+  50%      { filter: drop-shadow(0 0 35px rgba(var(--cyan-rgb),0.25)); }
+}
+
+/* Cards: bretGlow (box-shadow) + bretFilter (filter acceptor re-emission) */
 body.detail-2 .snake-card:is(:hover,.th),
 body.detail-2 .pub-card:is(:hover,.th),
 body.detail-2 .lnk:is(:hover,.th) {
-  border-color: rgba(0,212,255,0.20);
   animation:
-    bioBreatheCyan 3s ease-in-out var(--bio-phase, 0s) infinite,
-    bioBreatheGreen 8.155s ease-in-out var(--bio-phase-g, 0s) infinite;
+    bretGlow 3s ease-in-out var(--bio-phase, 0s) infinite,
+    bretFilter 8.155s ease-in-out var(--bio-phase-g, 0s) infinite;
 }
-
 body.detail-2 .se-card:is(:hover,.th) {
-  border-color: rgba(0,255,136,0.20);
   animation:
-    bioBreatheGreen 3s ease-in-out var(--bio-phase, 0s) infinite,
-    bioBreatheCyan 8.155s ease-in-out var(--bio-phase-g, 0s) infinite;
+    bretGlowRev 3s ease-in-out var(--bio-phase, 0s) infinite,
+    bretFilterRev 8.155s ease-in-out var(--bio-phase-g, 0s) infinite;
 }
-
 body.detail-2 .kw:is(:hover,.th) {
-  border-color: rgba(0,212,255,0.25);
-  color: var(--text-bright);
   animation:
-    bioBreatheCyan 3s ease-in-out var(--bio-phase, 0s) infinite;
+    bretGlow 3s ease-in-out var(--bio-phase, 0s) infinite,
+    bretText 3s ease-in-out var(--bio-phase, 0s) infinite;
 }
 
-/* ── Touch-selected: stronger immediate glow for mobile ── */
-body.detail-2 .snake-card.th,
-body.detail-2 .pub-card.th,
-body.detail-2 .lnk.th {
-  border-color: rgba(0,212,255,0.40);
-  box-shadow: 0 0 24px rgba(0,212,255,0.20), 0 0 48px rgba(0,255,136,0.10);
-}
-body.detail-2 .se-card.th {
-  border-color: rgba(0,255,136,0.40);
-  box-shadow: 0 0 24px rgba(0,255,136,0.20), 0 0 48px rgba(0,212,255,0.10);
-}
-body.detail-2 .kw.th {
-  border-color: rgba(0,212,255,0.50);
-  box-shadow: 0 0 16px rgba(0,212,255,0.20);
-}
-
-/* ── Text glow on hover — spectral color shift ── */
-@keyframes textSpectrumShift {
-  0%, 100% { color: var(--cyan); text-shadow: 0 0 8px rgba(0,212,255,0.12); }
-  40%      { color: #00E8B0; text-shadow: 0 0 14px rgba(0,232,180,0.18); }
-  70%      { color: var(--accent); text-shadow: 0 0 10px rgba(0,255,136,0.14); }
-}
-@keyframes textSpectrumShiftReverse {
-  0%, 100% { color: var(--accent); text-shadow: 0 0 8px rgba(0,255,136,0.12); }
-  40%      { color: #00E8B0; text-shadow: 0 0 14px rgba(0,232,180,0.18); }
-  70%      { color: var(--cyan); text-shadow: 0 0 10px rgba(0,212,255,0.14); }
-}
-
+/* Text children: bretText drives color + text-shadow spectral cascade */
 body.detail-2 .snake-card:is(:hover,.th) .snake-role,
 body.detail-2 .pub-card:is(:hover,.th) .pub-year,
 body.detail-2 .pub-card:is(:hover,.th) .pub-type,
 body.detail-2 .pub-card:is(:hover,.th) .pub-arrow,
 body.detail-2 .lnk:is(:hover,.th) .lnk-icon {
-  animation: textSpectrumShift 4s ease-in-out var(--bio-phase, 0s) infinite;
+  animation: bretText 3s ease-in-out var(--bio-phase, 0s) infinite;
 }
 body.detail-2 .pub-card:is(:hover,.th) .pub-type {
   border-color: var(--border);
@@ -1133,7 +1122,7 @@ body.detail-2 .pub-card:is(:hover,.th) .pub-type {
 body.detail-2 .se-card:is(:hover,.th) .se-score,
 body.detail-2 .se-card:is(:hover,.th) .se-tag,
 body.detail-2 .se-card:is(:hover,.th) .se-arrow {
-  animation: textSpectrumShiftReverse 4s ease-in-out var(--bio-phase, 0s) infinite;
+  animation: bretTextRev 3s ease-in-out var(--bio-phase, 0s) infinite;
 }
 body.detail-2 .se-card:is(:hover,.th) .se-tag {
   border-color: rgba(0,255,136,0.12);
@@ -1149,9 +1138,9 @@ body.detail-2 .lnk:is(:hover,.th) .lnk-icon {
 /* ── Ambient breathing — section lines + snake tracks ── */
 /* Weyl-detuned via --bio-dur (set by JS) for desynchronized colony effect */
 @keyframes ambientPulse {
-  0%, 100% { opacity: 0.4; }
-  12%      { opacity: 0.9; }
-  30%      { opacity: 0.65; }
+  0%, 100% { opacity: 0.35; }
+  12%      { opacity: 1; }
+  30%      { opacity: 0.7; }
 }
 
 body.detail-2 .sec-line {

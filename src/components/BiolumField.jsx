@@ -53,7 +53,7 @@ export default function BiolumField({ active }) {
         // Color temperature: 0 = pure cyan (480nm), 1 = pure green (509nm)
         temp: Math.random(),
         // Intensity ceiling — some organisms are dimmer
-        maxAlpha: 0.15 + Math.random() * 0.35,
+        maxAlpha: 0.25 + Math.random() * 0.40,
         // Proximity excitation (will be updated each frame)
         excitation: 0,
       })

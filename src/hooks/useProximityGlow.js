@@ -1,24 +1,63 @@
 import { useEffect, useRef } from 'react'
 
 /**
- * useProximityGlow — makes cards glow based on cursor proximity, not just hover.
+ * useProximityGlow — BRET system setup + cursor proximity tracking.
  *
- * For each card matching `selector`, computes distance from cursor to card center.
- * Cards within `radius` get:
- *   --prox (0–1) for CSS to drive gradient opacity
- *   --prox-x, --prox-y for directional gradient position
- *   Inline box-shadow and border-color that smoothly interpolate with distance
+ * On mount:
+ *   1. Reads --cyan (donor) and --accent (acceptor) from computed styles
+ *   2. Computes FRET superposition colors at 50% and 90% energy transfer
+ *   3. Injects --cyan-rgb, --accent-rgb, --bret-50-rgb, --bret-90-rgb,
+ *      --bret-90r-rgb on :root so CSS keyframes can reference them
+ *   4. Assigns Weyl-distributed phase offsets per card
  *
- * Phase offsets are Weyl-distributed via frac(n·√2) so no two cards pulse alike.
+ * Per frame:
+ *   Sets --prox/--prox-x/--prox-y on nearby cards for directional gradient.
+ *   Hover glow is handled entirely by CSS BRET keyframes.
  */
 
-const RADIUS = 500
+const RADIUS = 400
+const BRET_VARS = ['--cyan-rgb', '--accent-rgb', '--bret-50-rgb', '--bret-90-rgb', '--bret-90r-rgb']
+
+// Parse any CSS color to [r,g,b] via canvas 2d context
+function parseColorRgb(color) {
+  const ctx = document.createElement('canvas').getContext('2d')
+  ctx.fillStyle = color
+  const hex = ctx.fillStyle  // always normalizes to #rrggbb
+  return [
+    parseInt(hex.slice(1, 3), 16),
+    parseInt(hex.slice(3, 5), 16),
+    parseInt(hex.slice(5, 7), 16),
+  ]
+}
+
+// FRET additive superposition: (1-ε)·donor + ε·acceptor
+function fretMix(donor, acceptor, efficiency) {
+  return donor.map((d, i) =>
+    Math.round((1 - efficiency) * d + efficiency * acceptor[i])
+  )
+}
 
 export default function useProximityGlow(active, selector = '.glow-card, .kw') {
   const rafRef = useRef(null)
 
   useEffect(() => {
     if (!active) return
+
+    const root = document.documentElement
+    const rootStyle = getComputedStyle(root)
+
+    // Compute BRET FRET colors from design variables
+    const donor = parseColorRgb(rootStyle.getPropertyValue('--cyan').trim())
+    const acceptor = parseColorRgb(rootStyle.getPropertyValue('--accent').trim())
+    const fret50 = fretMix(donor, acceptor, 0.5)
+    const fret90 = fretMix(donor, acceptor, 0.9)
+    const fret90r = fretMix(acceptor, donor, 0.9)  // reversed species
+
+    root.style.setProperty('--cyan-rgb', donor.join(','))
+    root.style.setProperty('--accent-rgb', acceptor.join(','))
+    root.style.setProperty('--bret-50-rgb', fret50.join(','))
+    root.style.setProperty('--bret-90-rgb', fret90.join(','))
+    root.style.setProperty('--bret-90r-rgb', fret90r.join(','))
 
     let mouseX = -9999
     let mouseY = -9999
@@ -50,6 +89,12 @@ export default function useProximityGlow(active, selector = '.glow-card, .kw') {
     function update() {
       const cards = document.querySelectorAll(selector)
       for (const card of cards) {
+        // Hovered/touched cards: CSS BRET keyframes own all visual state.
+        if (card.matches(':hover, .th')) {
+          card.style.setProperty('--prox', '0')
+          continue
+        }
+
         const rect = card.getBoundingClientRect()
         const cx = rect.left + rect.width / 2
         const cy = rect.top + rect.height / 2
@@ -68,24 +113,8 @@ export default function useProximityGlow(active, selector = '.glow-card, .kw') {
           const ny = ((mouseY - rect.top) / rect.height * 100).toFixed(1)
           card.style.setProperty('--prox-x', `${nx}%`)
           card.style.setProperty('--prox-y', `${ny}%`)
-
-          // Don't set inline shadow/border on hovered cards — let CSS
-          // bioBreatheCyan/bioBreatheGreen animations take over
-          if (!card.matches(':hover, .th')) {
-            const cyanAlpha = (intensity * 0.10).toFixed(3)
-            const shadowSpread = (intensity * 12).toFixed(1)
-            const shadowSpread2 = (intensity * 20).toFixed(1)
-
-            card.style.borderColor = `rgba(0,212,255,${cyanAlpha})`
-            card.style.boxShadow = `0 0 ${shadowSpread}px rgba(0,212,255,${(intensity * 0.03).toFixed(3)}), 0 0 ${shadowSpread2}px rgba(0,255,136,${(intensity * 0.015).toFixed(3)})`
-          } else {
-            card.style.borderColor = ''
-            card.style.boxShadow = ''
-          }
         } else {
           card.style.setProperty('--prox', '0')
-          card.style.borderColor = ''
-          card.style.boxShadow = ''
         }
       }
       rafRef.current = requestAnimationFrame(update)
@@ -103,6 +132,7 @@ export default function useProximityGlow(active, selector = '.glow-card, .kw') {
       document.removeEventListener('touchend', onTouchEnd)
       document.removeEventListener('touchcancel', onTouchEnd)
       cancelAnimationFrame(rafRef.current)
+      BRET_VARS.forEach(v => root.style.removeProperty(v))
       const cards = document.querySelectorAll(selector)
       cards.forEach(el => {
         el.style.removeProperty('--prox')
@@ -110,8 +140,6 @@ export default function useProximityGlow(active, selector = '.glow-card, .kw') {
         el.style.removeProperty('--prox-y')
         el.style.removeProperty('--bio-phase')
         el.style.removeProperty('--bio-phase-g')
-        el.style.borderColor = ''
-        el.style.boxShadow = ''
       })
     }
   }, [active, selector])
