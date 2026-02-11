@@ -328,12 +328,16 @@ export default function App() {
 
       <nav className={`nav ${scrollY > 60 ? 'nav--scrolled' : ''}`}>
         <div className="nav-inner">
-          <a className="nav-a" href="#xp">Experience</a>
-          <a className="nav-a" href="#edu">Education</a>
-          <a className="nav-a" href="#pub">Publications</a>
-          {seData.length > 0 && <a className="nav-a" href="#se">Stack Exchange</a>}
-          {allKeywords.length > 0 && <a className="nav-a" href="#kw">Skills</a>}
-          {allLinks.length > 0 && <a className="nav-a" href="#links">Links</a>}
+          <div className="nav-group">
+            <a className="nav-a" href="#xp">Experience</a>
+            <a className="nav-a" href="#edu">Education</a>
+            <a className="nav-a" href="#pub">Publications</a>
+          </div>
+          <div className="nav-group">
+            {seData.length > 0 && <a className="nav-a" href="#se">Stack Exchange</a>}
+            {allKeywords.length > 0 && <a className="nav-a" href="#kw">Skills</a>}
+            {allLinks.length > 0 && <a className="nav-a" href="#links">Links</a>}
+          </div>
         </div>
         <div className="nav-levels">
           {[1, 2, 3, 4].map(n => (
