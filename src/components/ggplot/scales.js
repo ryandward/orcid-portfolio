@@ -6,22 +6,24 @@ export function useChartSize(baseWidth = 800, baseMargin = { top: 10, right: 30,
 
   useEffect(() => {
     if (!ref.current) return
-    const obs = new ResizeObserver(([e]) => setContainerW(e.contentRect.width))
+    let timer
+    const obs = new ResizeObserver(([e]) => {
+      clearTimeout(timer)
+      timer = setTimeout(() => setContainerW(Math.round(e.contentRect.width)), 300)
+    })
     obs.observe(ref.current)
-    return () => obs.disconnect()
+    return () => { obs.disconnect(); clearTimeout(timer) }
   }, [])
 
   const width = Math.max(containerW, 300)
-  // Left margin keeps a floor so labels always have space
-  const leftMin = 80
-  const left = Math.max(leftMin, Math.round(baseMargin.left * (width / baseWidth)))
+  const ratio = width / baseWidth
+  const left = Math.max(80, Math.round(baseMargin.left * ratio))
   const margin = {
     top: baseMargin.top,
-    right: Math.max(15, Math.round(baseMargin.right * (width / baseWidth))),
+    right: Math.max(15, Math.round(baseMargin.right * ratio)),
     bottom: baseMargin.bottom,
     left,
   }
-  // Max pixel width available for y-axis label text
   const maxLabelW = left - 15
 
   return { ref, width, margin, maxLabelW }

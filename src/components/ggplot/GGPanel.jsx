@@ -1,3 +1,5 @@
+import SmoothResize from '../SmoothResize'
+
 function truncate(text, maxPx, fontSize = 10) {
   const charW = fontSize * 0.58
   const maxChars = Math.floor(maxPx / charW)
@@ -40,14 +42,16 @@ export default function GGPanel({
       {caption && (() => {
         const parts = caption.split(' +')
         return (
-          <div className="gg-terminal">
-            {parts.map((part, i) => (
-              <div key={i} className="gg-term-line">
-                <span className="gg-term-prompt">{i === 0 ? '> ' : '  '}</span>
-                <span className="gg-term-code">{i === 0 ? part.trim() : '+ ' + part.trim()}</span>
-              </div>
-            ))}
-          </div>
+          <SmoothResize>
+            <div className="gg-terminal">
+              {parts.map((part, i) => (
+                <div key={i} className="gg-term-line">
+                  <span className="gg-term-prompt">{i === 0 ? '> ' : '  '}</span>
+                  <span className="gg-term-code">{i === 0 ? part.trim() : '+ ' + part.trim()}</span>
+                </div>
+              ))}
+            </div>
+          </SmoothResize>
         )
       })()}
       <div style={{ position: 'relative' }}>

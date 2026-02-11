@@ -1,5 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
-import { ORCID_ID, API_BASE, HEADERS, LINKEDIN, FALLBACK_BIO, SE_USER_ID, SE_API, SE_KEY, SE_FILTER } from './constants'
+import { ORCID_ID, API_BASE, HEADERS, LINKEDIN, FALLBACK_BIO, TAGLINE, SE_USER_ID, SE_API, SE_KEY, SE_FILTER } from './constants'
 import { workYear, cleanType, getDoiUrl, fixTitle } from './utils'
 import { Arrow, Chain } from './components/Icons'
 import CountUp from './components/CountUp'
@@ -13,6 +13,7 @@ import GGExperience from './components/ggplot/GGExperience'
 import GGPublications from './components/ggplot/GGPublications'
 import GGEducation from './components/ggplot/GGEducation'
 import GGStackExchange from './components/ggplot/GGStackExchange'
+import SmoothResize from './components/SmoothResize'
 import GGKeywords from './components/ggplot/GGKeywords'
 
 export default function App() {
@@ -259,55 +260,71 @@ export default function App() {
           </filter>
         </defs>
       </svg>
-      <header className="hero">
+      <SmoothResize><header className="hero">
         <div className="hero-bg"/>
         <div className="hero-grid" style={{ transform: `translateY(${scrollY * [0, 0, 0.12, 0.25, 0][detailLevel]}px)` }}/>
         <DnaHelix level={detailLevel}/>
         <div className="hero-inner">
+          {detailLevel !== 4 && (
+            <div className="hero-prompt">
+              <Typer text={`> ${TAGLINE}`} speed={45} delay={300}/>
+            </div>
+          )}
           {detailLevel === 4 ? (
             <>
               <div className="gg-terminal gg-hero-terminal">
                 <div className="gg-term-line">
                   <span className="gg-term-prompt">&gt; </span>
-                  <span className="gg-term-code"><Typer text="library(ggplot2)" speed={45} delay={300}/></span>
+                  <span className="gg-term-code">ryan_ward &lt;- list(</span>
+                </div>
+                <div className="gg-term-line">
+                  <span className="gg-term-code">  name    = </span>
+                  <span className="gg-term-string">"{givenName} {familyName}"</span>
+                  <span className="gg-term-code">,</span>
+                </div>
+                <div className="gg-term-line">
+                  <span className="gg-term-code">  title   = </span>
+                  <span className="gg-term-string">"{LINKEDIN.headline}"</span>
+                  <span className="gg-term-code">,</span>
+                </div>
+                <div className="gg-term-line">
+                  <span className="gg-term-code">  loc     = </span>
+                  <span className="gg-term-string">"{LINKEDIN.location}"</span>
+                  <span className="gg-term-code">,</span>
+                </div>
+                <div className="gg-term-line">
+                  <span className="gg-term-code">  pubs    = </span>
+                  <span className="gg-term-code">{works.length}</span>
+                  <span className="gg-term-code">,</span>
+                </div>
+                <div className="gg-term-line">
+                  <span className="gg-term-code">  roles   = </span>
+                  <span className="gg-term-code">{LINKEDIN.experience.length}</span>
+                  <span className="gg-term-code">,</span>
+                </div>
+                <div className="gg-term-line">
+                  <span className="gg-term-code">  orcid   = </span>
+                  <span className="gg-term-string">"{ORCID_ID}"</span>
+                  <span className="gg-term-code">,</span>
+                </div>
+                <div className="gg-term-line">
+                  <span className="gg-term-code">  bio     = </span>
+                  <span className="gg-term-string">"{bio || FALLBACK_BIO}"</span>
+                </div>
+                <div className="gg-term-line">
+                  <span className="gg-term-code">)</span>
                 </div>
                 <div className="gg-term-line">
                   <span className="gg-term-prompt">&gt; </span>
                   <span className="gg-term-code">ggplot(data = ryan_ward)</span>
                 </div>
-                <div className="gg-term-line gg-hero-name">
-                  <span className="gg-term-comment"># {givenName} {familyName}</span>
-                </div>
                 <div className="gg-term-line">
-                  <span className="gg-term-prompt">&gt; </span>
-                  <span className="gg-term-code">ryan_ward$headline</span>
-                </div>
-                <div className="gg-term-line">
-                  <span className="gg-term-index">[1] </span>
-                  <span className="gg-term-string">"{LINKEDIN.headline}"</span>
-                </div>
-                <div className="gg-term-line">
-                  <span className="gg-term-prompt">&gt; </span>
-                  <span className="gg-term-code">ryan_ward$location</span>
-                </div>
-                <div className="gg-term-line">
-                  <span className="gg-term-index">[1] </span>
-                  <span className="gg-term-string">"{LINKEDIN.location}"</span>
-                </div>
-                <div className="gg-term-line">
-                  <span className="gg-term-prompt">&gt; </span>
-                  <span className="gg-term-code">cat(ryan_ward$bio)</span>
-                </div>
-                <div className="gg-term-line">
-                  <span className="gg-term-string">{bio || FALLBACK_BIO}</span>
+                  <span className="gg-term-comment"># <Typer text={TAGLINE} speed={45} delay={300}/></span>
                 </div>
               </div>
             </>
           ) : (
             <>
-              <div className="hero-prompt">
-                <Typer text="> researcher / engineer / builder" speed={45} delay={300}/>
-              </div>
               <h1 className="hero-name">
                 <span className="hero-name-line" style={{ animationDelay: '0.4s' }}>{givenName}</span>
                 <span className="hero-name-line accent" style={{ animationDelay: '0.55s' }}>{familyName}</span>
@@ -324,7 +341,7 @@ export default function App() {
             </>
           )}
         </div>
-      </header>
+      </header></SmoothResize>
 
       <nav className={`nav ${scrollY > 60 ? 'nav--scrolled' : ''}`}>
         <div className="nav-inner">
