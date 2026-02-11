@@ -226,7 +226,7 @@ body {
 .nav-a {
   font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--text-ghost); text-decoration: none;
-  padding: 0.35rem 1rem; white-space: nowrap;
+  padding: 0.35rem 0.5rem; white-space: nowrap;
   border-bottom: 1px solid transparent; transition: all 0.2s;
   position: relative;
 }
@@ -239,7 +239,7 @@ body {
 /* Nav level switcher */
 .nav-levels {
   display: flex; align-items: center; justify-content: center; gap: 2px;
-  padding: 0.15rem 0 0.4rem;
+  padding: 0.35rem 0 0.4rem;
 }
 .nav-lvl {
   width: 22px; height: 22px;
