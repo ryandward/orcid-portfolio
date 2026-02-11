@@ -5,8 +5,10 @@ import { Arrow, Chain } from './components/Icons'
 import CountUp from './components/CountUp'
 import Typer from './components/Typer'
 import DnaHelix from './components/DnaHelix'
+import BiolumField from './components/BiolumField'
 import Reveal from './components/Reveal'
 import GlowCard from './components/GlowCard'
+import useProximityGlow from './hooks/useProximityGlow'
 import SnakeTimeline from './components/SnakeTimeline'
 import StackExchangeSection from './components/StackExchangeSection'
 import GGExperience from './components/ggplot/GGExperience'
@@ -122,6 +124,9 @@ export default function App() {
     })
     return () => els.forEach(el => el.style.removeProperty('--bio-dur'))
   }, [detailLevel])
+
+  // Mouse proximity glow for level 2 cards
+  useProximityGlow(detailLevel === 2)
 
   const SE_CACHE_KEY = 'se_cache_v4'
   const SE_CACHE_TTL = 60 * 60 * 1000 // 1 hour
@@ -278,6 +283,7 @@ export default function App() {
           </filter>
         </defs>
       </svg>
+      <BiolumField active={detailLevel === 2}/>
       <SmoothResize><header className="hero">
         <div className="hero-bg"/>
         <div className="hero-grid" style={{ transform: `translateY(${scrollY * [0, 0, 0.12, 0.25, 0][detailLevel]}px)` }}/>

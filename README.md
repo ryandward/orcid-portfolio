@@ -20,28 +20,42 @@ The site has three visual modes, toggled via the **1 / 2 / 3** buttons in the na
 
 ## Level 2: Bioluminescence Simulation
 
-The bioluminescent mode models real BRET (Bioluminescence Resonance Energy Transfer) physics using layered CSS animations and mathematically-detuned oscillators.
+The bioluminescent mode models real BRET (Bioluminescence Resonance Energy Transfer) physics using layered animations, cursor-reactive particle fields, and mathematically-detuned oscillators.
 
-### Asymmetric Enzyme-Kinetics Keyframes
+### Bioluminescent Spore Field (Canvas)
 
-Real bioluminescence follows Michaelis-Menten kinetics with product inhibition: the luciferase-catalyzed reaction produces a fast flash (rise in ~4% of the cycle) followed by slow exponential decay as oxyluciferin inhibits the enzyme (remaining 96%). The keyframes encode this asymmetric curve directly — not a sine wave.
+A full-page canvas renders 150 drifting spore particles, each an independent bioluminescent organism:
+
+- **Enzyme kinetics**: Each spore pulses via a Michaelis-Menten&ndash;inspired function &mdash; fast substrate binding (12% of cycle), brief plateau, then exponential product-inhibited decay. Not a sine wave.
+- **Individual metabolism**: Periods are Weyl-distributed (golden ratio sequence) from 4&ndash;10s, so no two spores pulse in sync.
+- **Color temperature**: Each spore sits somewhere on the cyan (480nm) to green (509nm) spectrum, interpolated via `temp` parameter.
+- **Cursor attraction**: Spores within 280px of the cursor are drawn toward it and brighten &mdash; like dinoflagellates reacting to mechanical shear in the water. Move the cursor to gather and excite them.
+- **Glow halos**: Brighter spores emit soft radial gradient halos around their core.
+
+### Cursor Proximity Glow (Cards)
+
+A JS hook (`useProximityGlow`) computes cursor distance to every interactive card each frame:
+
+- Cards within 500px get `--prox` (0&ndash;1, quadratic falloff) driving subtle border color and box-shadow intensity
+- `--prox-x` / `--prox-y` track cursor position relative to each card
+- Phase offsets (`--bio-phase`, `--bio-phase-g`) are Weyl-distributed via frac(*n*&sdot;&radic;2) so no two cards pulse identically
 
 ### BRET Energy Cascade (Cyan &rarr; Green)
 
-In real BRET, a coelenterazine donor emits at ~480nm (cyan) first, then non-radiatively transfers energy to a GFP acceptor which re-emits at ~509nm (green) with a temporal delay. Energy always flows from shorter wavelength (higher energy) to longer wavelength — a thermodynamic constraint.
+In real BRET, a coelenterazine donor emits at ~480nm (cyan) first, then non-radiatively transfers energy to a GFP acceptor which re-emits at ~509nm (green) with a temporal delay. Energy always flows from shorter wavelength (higher energy) to longer wavelength &mdash; a thermodynamic constraint.
 
-Each hovered card runs two animation layers on separate CSS properties (filter + box-shadow) so they stack without conflict:
+Each hovered card runs two animation layers on separate CSS properties at Euler-ratio durations:
 
 ```
-bioGlowCyan:  3s      (filter — cyan donor flash, Michaelis-Menten shape)
-bioGlowGreen: 3e s    (box-shadow — green acceptor re-emission, delayed peak)
+bioBreatheCyan:  3s      (box-shadow — cyan donor pulse)
+bioBreatheGreen: 3e s    (filter — green acceptor re-emission, ~8.155s)
 ```
 
-Text color itself animates through the emission spectrum: neutral &rarr; cyan donor flash &rarr; green acceptor peak &rarr; fade to neutral.
+Text shifts through the emission spectrum via `textSpectrumShift`: cyan &rarr; intermediate teal &rarr; green (reversed for SE cards).
 
 ### Euler's Number Duration Coupling
 
-The two glow layers run at durations coupled by **e** (Euler's number, &approx; 2.718): green runs at 3s, cyan at 3*e* &approx; 8.155s. Where Level 3 uses &phi; (algebraic irrational from number theory), Level 2 uses *e* (transcendental, from calculus) — the natural constant of exponential growth and decay, and the mathematical foundation of enzyme kinetics. Near-alignment takes ~80s.
+The two glow layers run at durations coupled by **e** (Euler's number, &approx; 2.718). Where Level 3 uses &phi; (algebraic irrational from number theory), Level 2 uses *e* (transcendental, from calculus) &mdash; the natural constant of exponential growth and decay, and the mathematical foundation of enzyme kinetics. Near-alignment takes ~80s.
 
 ### Weyl Equidistribution (Ambient Detuning)
 
@@ -51,7 +65,11 @@ Where Level 3 distributes animation *phases* (R&#x2082; sequence &mdash; every e
 duration_n = BASE + RANGE * frac(n * sqrt(2))
 ```
 
-By Weyl's theorem, frac(*n*&sdot;&radic;2) is equidistributed on [0,1], giving well-spread duration perturbations. Each section line and snake track pulses at its own natural frequency (5&ndash;7s), drifting in and out of near-synchronization — like a dinoflagellate colony where each organism has its own metabolic rate.
+By Weyl's theorem, frac(*n*&sdot;&radic;2) is equidistributed on [0,1]. Each section line and snake track pulses at its own natural frequency (5&ndash;7s), drifting in and out of near-synchronization &mdash; like a dinoflagellate colony where each organism has its own metabolic rate.
+
+### DNA Helix (Canvas)
+
+The double helix uses BRET-colored strands (cyan + green) with edge-fading, sparser rungs, node dots with radial gradient halos on brighter nodes, and a slower meditative rotation.
 
 ### SE Cards: Reversed Organism
 
