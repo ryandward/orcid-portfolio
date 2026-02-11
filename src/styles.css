@@ -1491,8 +1491,9 @@ body.detail-4::-webkit-scrollbar-thumb { background: #D9D9D9; }
   /* Level 3 mobile — tame section titles */
   body.detail-3 .sec-title { font-size: 1.8rem; }
   body.detail-3 .sec-label { font-size: 4rem; right: -0.5rem; }
-  /* Level 4 — SVG panels already scale via viewBox, just tighten spacing */
-  .gg-panel { overflow-x: auto; }
+  /* Level 4 — keep charts readable with horizontal scroll */
+  .gg-panel { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .gg-panel svg { min-width: 600px; }
   .gg-legend-items { gap: 0.4rem; }
   .gg-legend-item { font-size: 0.6rem; }
 }
