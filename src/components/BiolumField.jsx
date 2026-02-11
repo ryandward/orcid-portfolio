@@ -15,7 +15,7 @@ import { useRef, useEffect, useCallback } from 'react'
 const SPORE_COUNT = 250
 const PROXIMITY_RADIUS = 280
 const OU_THETA = 0.0003     // Ornstein-Uhlenbeck mean-reversion rate (loose spring)
-const BROWNIAN_SIGMA = 0.12 // Brownian noise amplitude (visible wandering)
+const BROWNIAN_SIGMA = 0.04 // Brownian noise amplitude (gentle wandering)
 const ATTRACT_STRENGTH = 0.01 // cursor attraction (saturating)
 
 // Fast enzymatic rise, slow product-inhibited decay (asymmetric pulse)
@@ -69,12 +69,22 @@ export default function BiolumField({ active }) {
     let animId
     const dpr = window.devicePixelRatio || 1
 
+    let resizeTimer
     function resize() {
       const rect = canvas.getBoundingClientRect()
       canvas.width = rect.width * dpr
       canvas.height = rect.height * dpr
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      if (!sporesRef.current) initSpores(rect.width, rect.height)
+      if (!sporesRef.current) {
+        initSpores(rect.width, rect.height)
+      } else {
+        clearTimeout(resizeTimer)
+        canvas.style.opacity = '0'
+        resizeTimer = setTimeout(() => {
+          initSpores(rect.width, rect.height)
+          canvas.style.opacity = active ? '1' : '0'
+        }, 400)
+      }
     }
     resize()
     window.addEventListener('resize', resize)
@@ -199,6 +209,7 @@ export default function BiolumField({ active }) {
 
     return () => {
       cancelAnimationFrame(animId)
+      clearTimeout(resizeTimer)
       window.removeEventListener('resize', resize)
       document.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mouseleave', onMouseLeave)
