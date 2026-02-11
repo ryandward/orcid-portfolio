@@ -1177,6 +1177,284 @@ body.detail-3 .detail-toast {
   font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;
 }
 
+/* ═══ LEVEL 4: ggplot(my_resume) ═══ */
+body.detail-4 {
+  --gg-panel-bg: #EBEBEB;
+  --gg-grid: #FFFFFF;
+  --gg-strip-bg: #D9D9D9;
+  --gg-strip-text: #1A1A1A;
+  --gg-axis: #4D4D4D;
+  --bg: #FFFFFF;
+  --bg-surface: #FFFFFF;
+  --bg-elevated: #F5F5F5;
+  --bg-glass: rgba(255, 255, 255, 0.95);
+  --bg-hover: #F0F0F0;
+  --accent: #4D4D4D;
+  --accent-dim: rgba(77, 77, 77, 0.1);
+  --accent-glow: rgba(77, 77, 77, 0.05);
+  --accent-bright: rgba(77, 77, 77, 0.2);
+  --border: rgba(0, 0, 0, 0.1);
+  --border-accent: rgba(77, 77, 77, 0.3);
+  --text: #1A1A1A;
+  --text-bright: #000000;
+  --text-dim: #4D4D4D;
+  --text-ghost: #808080;
+  --track: #4D4D4D;
+  --reveal-duration: 0s;
+  --reveal-ease: linear;
+  --hover-lift: 0px;
+  --glow-mult: 0;
+  --parallax-mult: 0;
+  --stagger-mult: 0;
+  font-family: Helvetica, Arial, sans-serif;
+  background: #FFFFFF;
+  color: #1A1A1A;
+}
+
+body.detail-4 .portfolio { animation: none; opacity: 1; }
+body.detail-4 .reveal { opacity: 1; transform: none; transition: none; }
+body.detail-4 .dna-canvas { display: none; }
+body.detail-4 .hero-bg { display: none; }
+body.detail-4 .hero-grid { display: none; }
+
+/* Hero — R console style */
+body.detail-4 .hero {
+  padding: 3rem 2rem 2rem;
+  background: #FFFFFF;
+  border-bottom: 1px solid #EBEBEB;
+}
+body.detail-4 .hero-name {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.5rem;
+}
+body.detail-4 .hero-name-line {
+  animation: none; opacity: 1;
+  color: #1A1A1A;
+}
+body.detail-4 .hero-name-line.accent {
+  color: #1A1A1A;
+  text-shadow: none;
+}
+body.detail-4 .hero-bio {
+  animation: none; opacity: 1;
+  font-size: 0.85rem;
+  color: #4D4D4D;
+  border: none; padding: 0;
+  max-width: none;
+}
+body.detail-4 .hero-stats { display: none; }
+body.detail-4 .hero-prompt { display: none; }
+body.detail-4 .gg-hero-terminal {
+  margin-bottom: 1rem;
+}
+.gg-hero-name .gg-term-comment {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #3CD6C2;
+  letter-spacing: -0.01em;
+}
+
+/* Nav — ggplot legend style */
+body.detail-4 .nav {
+  background: #FFFFFF;
+  backdrop-filter: none;
+  border-bottom: 1px solid #EBEBEB;
+}
+body.detail-4 .nav-a {
+  color: #4D4D4D;
+  font-family: Helvetica, Arial, sans-serif;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.75rem;
+}
+body.detail-4 .nav-a:hover { color: #000; }
+body.detail-4 .nav-a:hover::after { background: #4D4D4D; box-shadow: none; }
+body.detail-4 .nav-lvl {
+  font-family: Helvetica, Arial, sans-serif;
+  border-color: #D9D9D9;
+  color: #808080;
+  border-radius: 0;
+}
+body.detail-4 .nav-lvl:hover {
+  border-color: #4D4D4D;
+  color: #1A1A1A;
+}
+body.detail-4 .nav-lvl.active {
+  background: #4D4D4D;
+  color: #FFFFFF;
+  border-color: #4D4D4D;
+}
+
+/* Sections — no decorative headers on level 4, charts handle their own padding */
+body.detail-4 .section {
+  max-width: 880px;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Footer */
+body.detail-4 .footer { border-top-color: #EBEBEB; }
+body.detail-4 .footer-l { color: #808080; }
+body.detail-4 .footer-l a { color: #4D4D4D; }
+body.detail-4 .footer-r { color: #808080; }
+
+/* Toast */
+body.detail-4 .detail-toast {
+  background: #FFFFFF;
+  border: 1px solid #EBEBEB;
+  color: #4D4D4D;
+  font-family: 'Space Mono', monospace;
+}
+
+/* Scrollbar */
+body.detail-4::-webkit-scrollbar-track { background: #FFFFFF; }
+body.detail-4::-webkit-scrollbar-thumb { background: #D9D9D9; }
+
+/* ═══ GGPLOT PANEL COMPONENTS ═══ */
+.gg-panel {
+  margin-bottom: 2rem;
+  width: 100%;
+}
+.gg-plot-title {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  fill: #1A1A1A;
+}
+.gg-axis-label {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 10px;
+  fill: #4D4D4D;
+}
+.gg-axis-title {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 11px;
+  fill: #1A1A1A;
+  font-weight: 600;
+}
+/* Ephemeral Nocturne terminal — used above every chart and for R output */
+.gg-terminal {
+  background: #090909;
+  color: #D8D8D8;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.75rem;
+  line-height: 1.7;
+  padding: 0.6rem 1rem;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.gg-terminal::before {
+  content: '';
+  display: block;
+  margin-bottom: 0.5rem;
+  background:
+    radial-gradient(circle at 6px 6px, #FF5F56 5px, transparent 5px),
+    radial-gradient(circle at 22px 6px, #FFBD2E 5px, transparent 5px),
+    radial-gradient(circle at 38px 6px, #27C93F 5px, transparent 5px);
+  height: 12px;
+  width: 50px;
+}
+.gg-term-line {
+  white-space: pre;
+}
+.gg-term-prompt {
+  color: #66CD00;
+}
+.gg-term-code {
+  color: #D8D8D8;
+}
+.gg-term-string {
+  color: #CDAD00;
+  white-space: pre-wrap;
+}
+.gg-term-index {
+  color: #5C5C5C;
+}
+.gg-term-comment {
+  color: #5C5C5C;
+  font-style: italic;
+}
+.gg-legend {
+  padding: 0.5rem 0;
+}
+.gg-legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+.gg-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 0.7rem;
+  color: #4D4D4D;
+}
+.gg-legend-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+.gg-panel svg g,
+.gg-panel svg rect,
+.gg-panel svg circle,
+.gg-panel svg line,
+.gg-panel svg polygon,
+.gg-panel svg path {
+  transition: opacity 0.25s ease;
+}
+
+.gg-tooltip {
+  position: absolute;
+  pointer-events: none;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.88);
+  color: #FFFFFF;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  max-width: 300px;
+  white-space: normal;
+  transform: translate(12px, -50%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+.gg-tooltip-title {
+  font-weight: 700;
+  margin-bottom: 0.15rem;
+}
+.gg-tooltip-detail {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.7rem;
+}
+.gg-legend-rows {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  justify-content: center;
+}
+.gg-legend-heading {
+  font-weight: 700;
+  font-size: 0.65rem;
+  color: #1A1A1A;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.gg-legend-shape {
+  fill: #4D4D4D;
+  stroke: #4D4D4D;
+  flex-shrink: 0;
+}
+
 /* ═══ DETAIL TOAST ═══ */
 .detail-toast {
   position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
@@ -1212,6 +1490,10 @@ body.detail-3 .detail-toast {
   /* Level 3 mobile — tame section titles */
   body.detail-3 .sec-title { font-size: 1.8rem; }
   body.detail-3 .sec-label { font-size: 4rem; right: -0.5rem; }
+  /* Level 4 — SVG panels already scale via viewBox, just tighten spacing */
+  .gg-panel { overflow-x: auto; }
+  .gg-legend-items { gap: 0.4rem; }
+  .gg-legend-item { font-size: 0.6rem; }
 }
 @media (max-width: 480px) {
   .hero-stats { flex-direction: column; }

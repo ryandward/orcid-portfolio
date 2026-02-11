@@ -1,5 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
-import { ORCID_ID, API_BASE, HEADERS, LINKEDIN, SE_USER_ID, SE_API, SE_KEY } from './constants'
+import { ORCID_ID, API_BASE, HEADERS, LINKEDIN, FALLBACK_BIO, SE_USER_ID, SE_API, SE_KEY, SE_FILTER } from './constants'
 import { workYear, cleanType, getDoiUrl, fixTitle } from './utils'
 import { Arrow, Chain } from './components/Icons'
 import CountUp from './components/CountUp'
@@ -9,6 +9,11 @@ import Reveal from './components/Reveal'
 import GlowCard from './components/GlowCard'
 import SnakeTimeline from './components/SnakeTimeline'
 import StackExchangeSection from './components/StackExchangeSection'
+import GGExperience from './components/ggplot/GGExperience'
+import GGPublications from './components/ggplot/GGPublications'
+import GGEducation from './components/ggplot/GGEducation'
+import GGStackExchange from './components/ggplot/GGStackExchange'
+import GGKeywords from './components/ggplot/GGKeywords'
 
 export default function App() {
   const [loading, setLoading] = useState(true)
@@ -18,7 +23,7 @@ export default function App() {
   const [educations, setEducations] = useState([])
   const [seData, setSeData] = useState([])
   const [scrollY, setScrollY] = useState(0)
-  const [detailLevel, setDetailLevel] = useState(2)
+  const [detailLevel, setDetailLevel] = useState(3)
   const [toast, setToast] = useState(null)
 
   useEffect(() => {
@@ -35,7 +40,7 @@ export default function App() {
     const onKey = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
       const n = parseInt(e.key)
-      if (n >= 1 && n <= 3) setDetailLevel(n)
+      if (n >= 1 && n <= 4) setDetailLevel(n)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -44,7 +49,7 @@ export default function App() {
   const didMount = useRef(false)
   useEffect(() => {
     if (!didMount.current) { didMount.current = true; return }
-    const labels = { 1: 'css: unloaded', 2: 'detail: normal', 3: 'EDITORIAL MODE' }
+    const labels = { 1: 'css: unloaded', 2: 'detail: normal', 3: 'EDITORIAL MODE', 4: 'ggplot(my_resume)' }
     setToast(labels[detailLevel])
     const id = setTimeout(() => setToast(null), 1500)
     return () => clearTimeout(id)
@@ -99,7 +104,7 @@ export default function App() {
     return () => els.forEach(el => { el.style.animationDelay = '' })
   }, [detailLevel])
 
-  const SE_CACHE_KEY = 'se_cache_v3'
+  const SE_CACHE_KEY = 'se_cache_v4'
   const SE_CACHE_TTL = 60 * 60 * 1000 // 1 hour
 
   async function fetchStackExchange() {
@@ -126,8 +131,8 @@ export default function App() {
         const hostname = new URL(site.site_url).hostname
         const apiName = hostname.split('.')[0]
         const [qRes, aRes] = await Promise.all([
-          fetch(`${SE_API}/users/${site.user_id}/questions?order=desc&sort=votes&site=${apiName}&pagesize=5&key=${SE_KEY}`).then(r => r.json()),
-          fetch(`${SE_API}/users/${site.user_id}/answers?order=desc&sort=votes&site=${apiName}&pagesize=3&key=${SE_KEY}`).then(r => r.json()),
+          fetch(`${SE_API}/users/${site.user_id}/questions?order=desc&sort=votes&site=${apiName}&pagesize=5&key=${SE_KEY}&filter=${encodeURIComponent(SE_FILTER)}`).then(r => r.json()),
+          fetch(`${SE_API}/users/${site.user_id}/answers?order=desc&sort=votes&site=${apiName}&pagesize=3&key=${SE_KEY}&filter=${encodeURIComponent(SE_FILTER)}`).then(r => r.json()),
         ])
 
         const answers = aRes.items || []
@@ -256,32 +261,68 @@ export default function App() {
       </svg>
       <header className="hero">
         <div className="hero-bg"/>
-        <div className="hero-grid" style={{ transform: `translateY(${scrollY * [0, 0, 0.12, 0.25][detailLevel]}px)` }}/>
+        <div className="hero-grid" style={{ transform: `translateY(${scrollY * [0, 0, 0.12, 0.25, 0][detailLevel]}px)` }}/>
         <DnaHelix level={detailLevel}/>
         <div className="hero-inner">
-          <div className="hero-prompt">
-            <Typer text="> researcher / engineer / builder" speed={45} delay={300}/>
-          </div>
-          <h1 className="hero-name">
-            <span className="hero-name-line" style={{ animationDelay: '0.4s' }}>{givenName}</span>
-            <span className="hero-name-line accent" style={{ animationDelay: '0.55s' }}>{familyName}</span>
-          </h1>
-          {bio ? <p className="hero-bio">{bio}</p> : (
-            <p className="hero-bio">
-              <strong>Geneticist</strong> and <strong>computational biologist</strong> who
-              builds tools for people who don't know what GitHub is. CRISPRi pipelines
-              for a lab that needed them yesterday. A fair loot system for 479 EverQuest
-              players who just want their dragon drops. Zero GitHub stars. Lots of users.
-            </p>
+          {detailLevel === 4 ? (
+            <>
+              <div className="gg-terminal gg-hero-terminal">
+                <div className="gg-term-line">
+                  <span className="gg-term-prompt">&gt; </span>
+                  <span className="gg-term-code"><Typer text="library(ggplot2)" speed={45} delay={300}/></span>
+                </div>
+                <div className="gg-term-line">
+                  <span className="gg-term-prompt">&gt; </span>
+                  <span className="gg-term-code">ggplot(data = ryan_ward)</span>
+                </div>
+                <div className="gg-term-line gg-hero-name">
+                  <span className="gg-term-comment"># {givenName} {familyName}</span>
+                </div>
+                <div className="gg-term-line">
+                  <span className="gg-term-prompt">&gt; </span>
+                  <span className="gg-term-code">ryan_ward$headline</span>
+                </div>
+                <div className="gg-term-line">
+                  <span className="gg-term-index">[1] </span>
+                  <span className="gg-term-string">"{LINKEDIN.headline}"</span>
+                </div>
+                <div className="gg-term-line">
+                  <span className="gg-term-prompt">&gt; </span>
+                  <span className="gg-term-code">ryan_ward$location</span>
+                </div>
+                <div className="gg-term-line">
+                  <span className="gg-term-index">[1] </span>
+                  <span className="gg-term-string">"{LINKEDIN.location}"</span>
+                </div>
+                <div className="gg-term-line">
+                  <span className="gg-term-prompt">&gt; </span>
+                  <span className="gg-term-code">cat(ryan_ward$bio)</span>
+                </div>
+                <div className="gg-term-line">
+                  <span className="gg-term-string">{bio || FALLBACK_BIO}</span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="hero-prompt">
+                <Typer text="> researcher / engineer / builder" speed={45} delay={300}/>
+              </div>
+              <h1 className="hero-name">
+                <span className="hero-name-line" style={{ animationDelay: '0.4s' }}>{givenName}</span>
+                <span className="hero-name-line accent" style={{ animationDelay: '0.55s' }}>{familyName}</span>
+              </h1>
+              <p className="hero-bio">{bio || FALLBACK_BIO}</p>
+              <div className="hero-stats">
+                <span className="stat stat--id">
+                  <a href={`https://orcid.org/${ORCID_ID}`} target="_blank" rel="noopener noreferrer">ORCID {ORCID_ID}</a>
+                </span>
+                <span className="stat">{LINKEDIN.location}</span>
+                <span className="stat"><span className="val"><CountUp target={works.length}/></span> publications</span>
+                <span className="stat"><span className="val"><CountUp target={LINKEDIN.experience.length}/></span> roles</span>
+              </div>
+            </>
           )}
-          <div className="hero-stats">
-            <span className="stat stat--id">
-              <a href={`https://orcid.org/${ORCID_ID}`} target="_blank" rel="noopener noreferrer">ORCID {ORCID_ID}</a>
-            </span>
-            <span className="stat">{LINKEDIN.location}</span>
-            <span className="stat"><span className="val"><CountUp target={works.length}/></span> publications</span>
-            <span className="stat"><span className="val"><CountUp target={LINKEDIN.experience.length}/></span> roles</span>
-          </div>
         </div>
       </header>
 
@@ -294,7 +335,7 @@ export default function App() {
           {allKeywords.length > 0 && <a className="nav-a" href="#kw">Skills</a>}
           {allLinks.length > 0 && <a className="nav-a" href="#links">Links</a>}
           <div className="nav-levels">
-            {[1, 2, 3].map(n => (
+            {[1, 2, 3, 4].map(n => (
               <button key={n} className={`nav-lvl${detailLevel === n ? ' active' : ''}`} onClick={() => setDetailLevel(n)}>{n}</button>
             ))}
           </div>
@@ -302,90 +343,120 @@ export default function App() {
       </nav>
 
       <section className="section" id="xp">
-        <Reveal><div className="sec-head">
-          <span className="sec-label">0{++n}</span>
-          <h2 className="sec-title">Experience</h2>
-          <div className="sec-line"/>
-        </div></Reveal>
-        <SnakeTimeline items={LINKEDIN.experience} type="xp"/>
+        {detailLevel === 4 ? (
+          <GGExperience experience={LINKEDIN.experience}/>
+        ) : (
+          <>
+            <Reveal><div className="sec-head">
+              <span className="sec-label">0{++n}</span>
+              <h2 className="sec-title">Experience</h2>
+              <div className="sec-line"/>
+            </div></Reveal>
+            <SnakeTimeline items={LINKEDIN.experience} type="xp"/>
+          </>
+        )}
       </section>
 
       {educations.length > 0 && (
         <section className="section" id="edu">
-          <Reveal><div className="sec-head">
-            <span className="sec-label">0{++n}</span>
-            <h2 className="sec-title">Education</h2>
-            <div className="sec-line"/>
-          </div></Reveal>
-          <SnakeTimeline items={educations} type="edu"/>
+          {detailLevel === 4 ? (
+            <GGEducation educations={educations}/>
+          ) : (
+            <>
+              <Reveal><div className="sec-head">
+                <span className="sec-label">0{++n}</span>
+                <h2 className="sec-title">Education</h2>
+                <div className="sec-line"/>
+              </div></Reveal>
+              <SnakeTimeline items={educations} type="edu"/>
+            </>
+          )}
         </section>
       )}
 
       {works.length > 0 && (
         <section className="section" id="pub">
-          <Reveal><div className="sec-head">
-            <span className="sec-label">0{++n}</span>
-            <h2 className="sec-title">Publications</h2>
-            <div className="sec-line"/>
-            <span className="sec-count">{works.length}</span>
-          </div></Reveal>
-          <div className="pub-grid">
-              {works.map((w, i) => {
-                const title = fixTitle(w.title?.title?.value) || 'Untitled'
-                const journal = w['journal-title']?.value || ''
-                const type = cleanType(w.type)
-                const year = workYear(w)
-                const doi = getDoiUrl(w['external-ids'])
-                return (
-                  <Reveal key={i} delay={i * 60}>
-                    <GlowCard className="pub-card" href={doi}>
-                      <div className="pub-card-top">
-                        <span className="pub-year">{year}</span>
-                        <span className="pub-type">{type}</span>
-                      </div>
-                      <h3 className="pub-title">{title}</h3>
-                      {journal && <div className="pub-journal">{journal}</div>}
-                      {w.labName && <div className="pub-lab">{w.labName}</div>}
-                      {doi && (
-                        <div className="pub-arrow"><Arrow/></div>
-                      )}
-                    </GlowCard>
-                  </Reveal>
-                )
-              })}
-          </div>
+          {detailLevel === 4 ? (
+            <GGPublications works={works}/>
+          ) : (
+            <>
+              <Reveal><div className="sec-head">
+                <span className="sec-label">0{++n}</span>
+                <h2 className="sec-title">Publications</h2>
+                <div className="sec-line"/>
+                <span className="sec-count">{works.length}</span>
+              </div></Reveal>
+              <div className="pub-grid">
+                  {works.map((w, i) => {
+                    const title = fixTitle(w.title?.title?.value) || 'Untitled'
+                    const journal = w['journal-title']?.value || ''
+                    const type = cleanType(w.type)
+                    const year = workYear(w)
+                    const doi = getDoiUrl(w['external-ids'])
+                    return (
+                      <Reveal key={i} delay={i * 60}>
+                        <GlowCard className="pub-card" href={doi}>
+                          <div className="pub-card-top">
+                            <span className="pub-year">{year}</span>
+                            <span className="pub-type">{type}</span>
+                          </div>
+                          <h3 className="pub-title">{title}</h3>
+                          {journal && <div className="pub-journal">{journal}</div>}
+                          {w.labName && <div className="pub-lab">{w.labName}</div>}
+                          {doi && (
+                            <div className="pub-arrow"><Arrow/></div>
+                          )}
+                        </GlowCard>
+                      </Reveal>
+                    )
+                  })}
+              </div>
+            </>
+          )}
         </section>
       )}
 
       {seData.length > 0 && (
         <section className="section" id="se">
-          <Reveal><div className="sec-head">
-            <span className="sec-label">0{++n}</span>
-            <h2 className="sec-title">Stack Exchange</h2>
-            <div className="sec-line"/>
-          </div></Reveal>
-          <StackExchangeSection seData={seData}/>
+          {detailLevel === 4 ? (
+            <GGStackExchange seData={seData}/>
+          ) : (
+            <>
+              <Reveal><div className="sec-head">
+                <span className="sec-label">0{++n}</span>
+                <h2 className="sec-title">Stack Exchange</h2>
+                <div className="sec-line"/>
+              </div></Reveal>
+              <StackExchangeSection seData={seData}/>
+            </>
+          )}
         </section>
       )}
 
       {allKeywords.length > 0 && (
         <section className="section" id="kw">
-          <Reveal><div className="sec-head">
-            <span className="sec-label">0{++n}</span>
-            <h2 className="sec-title">Research Interests &amp; Skills</h2>
-            <div className="sec-line"/>
-          </div></Reveal>
-          <div className="kw-wrap">
-            {allKeywords.map((k, i) => (
-              <Reveal key={i} delay={i * 40} className="kw-reveal">
-                <span className="kw">{k}</span>
-              </Reveal>
-            ))}
-          </div>
+          {detailLevel === 4 ? (
+            <GGKeywords keywords={allKeywords}/>
+          ) : (
+            <>
+              <Reveal><div className="sec-head">
+                <span className="sec-label">0{++n}</span>
+                <h2 className="sec-title">Research Interests &amp; Skills</h2>
+                <div className="sec-line"/>
+              </div></Reveal>
+              <div className="kw-wrap">
+                {allKeywords.map((k, i) => (
+                  <Reveal key={i} delay={i * 40} className="kw-reveal">
+                    <span className="kw">{k}</span>
+                  </Reveal>
+                ))}
+              </div>
+            </>
+          )}
         </section>
       )}
 
-      {allLinks.length > 0 && (
+      {allLinks.length > 0 && detailLevel !== 4 && (
         <section className="section" id="links">
           <Reveal><div className="sec-head">
             <span className="sec-label">0{++n}</span>

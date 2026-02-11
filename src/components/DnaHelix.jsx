@@ -3,7 +3,7 @@ import { useRef, useEffect } from 'react'
 export default function DnaHelix({ level = 2 }) {
   const canvasRef = useRef(null)
   useEffect(() => {
-    if (level === 1) return
+    if (level === 1 || level === 4) return
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
