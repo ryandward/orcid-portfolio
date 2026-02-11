@@ -44,6 +44,7 @@ export default function GGExperience({ experience }) {
 
   const legend = (
     <div className="gg-legend-items">
+      <span className="gg-legend-heading">org</span>
       {orgs.map(o => (
         <span key={o} className="gg-legend-item">
           <span className="gg-legend-swatch" style={{ background: colorMap[o] }}/>

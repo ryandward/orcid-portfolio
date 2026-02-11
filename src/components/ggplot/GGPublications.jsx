@@ -51,6 +51,7 @@ export default function GGPublications({ works }) {
 
   const legend = (
     <div className="gg-legend-items">
+      <span className="gg-legend-heading">type</span>
       {types.map(t => (
         <span key={t} className="gg-legend-item">
           <span className="gg-legend-swatch" style={{ background: colorMap[t], borderRadius: '50%' }}/>

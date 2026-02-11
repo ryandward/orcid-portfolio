@@ -57,7 +57,7 @@ export default function GGEducation({ educations }) {
   const legend = (
     <div className="gg-legend-rows">
       <div className="gg-legend-items">
-        <span className="gg-legend-heading">Degree</span>
+        <span className="gg-legend-heading">degree</span>
         {degrees.map(d => (
           <span key={d} className="gg-legend-item">
             <span className="gg-legend-swatch" style={{ background: colorMap[d], borderRadius: '50%' }}/>
@@ -66,7 +66,7 @@ export default function GGEducation({ educations }) {
         ))}
       </div>
       <div className="gg-legend-items">
-        <span className="gg-legend-heading">Institution</span>
+        <span className="gg-legend-heading">institution</span>
         {orgs.map(o => (
           <span key={o} className="gg-legend-item">
             <svg width="14" height="14" viewBox="-8 -8 16 16" className="gg-legend-shape">
