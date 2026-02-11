@@ -150,7 +150,7 @@ export default function App() {
 
   // GCD-smart grids for nav + links
   const [navRef, navCols] = useGcdGrid(80, 0, loading)
-  const [linksRef, linkCols] = useGcdGrid(140, 12, loading)
+  const [linksRef, linkCols] = useGcdGrid(240, 12, loading)
 
   const SE_CACHE_KEY = 'se_cache_v4'
   const SE_CACHE_TTL = 60 * 60 * 1000 // 1 hour
