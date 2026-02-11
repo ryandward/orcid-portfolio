@@ -117,7 +117,11 @@ export default function App() {
     let seed = 0
     const id = setInterval(() => {
       seed = (seed + 1) % 12
-      turbs.forEach(el => el.setAttribute('seed', seed))
+      turbs.forEach(el => {
+        el.setAttribute('seed', seed)
+        // Nudge baseFrequency to force Safari/WebKit to re-render the filter
+        el.setAttribute('baseFrequency', seed % 2 === 0 ? '0.015 0.8' : '0.0150001 0.8')
+      })
     }, 83) // ~12fps
     return () => clearInterval(id)
   }, [detailLevel])
@@ -157,7 +161,7 @@ export default function App() {
     for (let c = n; c >= 1; c--) {
       if (n % c === 0) factors.push(c)
     }
-    const MIN_W = 180
+    const MIN_W = 140
     const GAP = 12
     const observer = new ResizeObserver(([entry]) => {
       const w = entry.contentRect.width
