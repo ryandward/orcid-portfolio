@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import GGPanel from './GGPanel'
 import { linearScale, categoricalScale, ggplotHue, niceTicks } from './scales'
 
 export default function GGStackExchange({ seData }) {
   const [hoveredKey, setHoveredKey] = useState(null)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+  const tappedRef = useRef(null)
 
   const sites = useMemo(() => seData.map(s => {
     const hostname = new URL(s.site_url).hostname
@@ -134,7 +135,20 @@ export default function GGStackExchange({ seData }) {
                   onMouseEnter={() => setHoveredKey(key)}
                   onMouseMove={handleMouseMove}
                   onMouseLeave={() => setHoveredKey(null)}
-                  onClick={() => window.open(seg.link, '_blank', 'noopener')}
+                  onClick={(e) => {
+                    if ('ontouchstart' in window && tappedRef.current !== key) {
+                      e.preventDefault()
+                      tappedRef.current = key
+                      setHoveredKey(key)
+                      const svg = e.currentTarget.closest('svg')
+                      if (svg) {
+                        const rect = svg.getBoundingClientRect()
+                        setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+                      }
+                      return
+                    }
+                    window.open(seg.link, '_blank', 'noopener')
+                  }}
                 />
               )
             })}

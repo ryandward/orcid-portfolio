@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { cleanType, getDoiUrl, workYear, fixTitle } from '../../utils'
 import GGPanel from './GGPanel'
 import { linearScale, ggplotHue, niceTicks } from './scales'
@@ -6,6 +6,7 @@ import { linearScale, ggplotHue, niceTicks } from './scales'
 export default function GGPublications({ works }) {
   const [hoveredIdx, setHoveredIdx] = useState(null)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+  const tappedRef = useRef(null)
 
   const items = works.map(w => ({
     year: parseInt(workYear(w)) || 0,
@@ -105,7 +106,21 @@ export default function GGPublications({ works }) {
             onMouseEnter={() => setHoveredIdx(i)}
             onMouseMove={handleMouseMove}
             onMouseLeave={() => setHoveredIdx(null)}
-            onClick={() => d.doi && window.open(d.doi, '_blank', 'noopener')}
+            onClick={(e) => {
+              if (!d.doi) return
+              if ('ontouchstart' in window && tappedRef.current !== i) {
+                e.preventDefault()
+                tappedRef.current = i
+                setHoveredIdx(i)
+                const svg = e.currentTarget.closest('svg')
+                if (svg) {
+                  const rect = svg.getBoundingClientRect()
+                  setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+                }
+                return
+              }
+              window.open(d.doi, '_blank', 'noopener')
+            }}
             style={{ cursor: d.doi ? 'pointer' : 'default' }}
           >
             <circle
