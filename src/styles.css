@@ -1090,6 +1090,22 @@ body.detail-2 .kw:is(:hover,.th) {
     bioBreatheCyan 3s ease-in-out var(--bio-phase, 0s) infinite;
 }
 
+/* ── Touch-selected: stronger immediate glow for mobile ── */
+body.detail-2 .snake-card.th,
+body.detail-2 .pub-card.th,
+body.detail-2 .lnk.th {
+  border-color: rgba(0,212,255,0.40);
+  box-shadow: 0 0 24px rgba(0,212,255,0.20), 0 0 48px rgba(0,255,136,0.10);
+}
+body.detail-2 .se-card.th {
+  border-color: rgba(0,255,136,0.40);
+  box-shadow: 0 0 24px rgba(0,255,136,0.20), 0 0 48px rgba(0,212,255,0.10);
+}
+body.detail-2 .kw.th {
+  border-color: rgba(0,212,255,0.50);
+  box-shadow: 0 0 16px rgba(0,212,255,0.20);
+}
+
 /* ── Text glow on hover — spectral color shift ── */
 @keyframes textSpectrumShift {
   0%, 100% { color: var(--cyan); text-shadow: 0 0 8px rgba(0,212,255,0.12); }
