@@ -15,7 +15,7 @@ The site has three visual modes, toggled via the **1 / 2 / 3** buttons in the na
 | Level | Name | Description |
 |-------|------|-------------|
 | **1** | `css: unloaded` | Times New Roman, blue links, bare HTML aesthetic ("forgot the stylesheet") |
-| **2** | `bioluminescent` | Space Mono, dark theme, dual-layer BRET glow simulation, Weyl-detuned ambient pulsing |
+| **2** | `bioluminescent` | Space Mono, dark theme, per-frame BRET physics (dual-exponential kinetics), enzyme-kinetic excitation |
 | **3** | `EDITORIAL MODE` | Georgia serif, warm paper (#E8E3DC), hot pink (#FF006E) accent, full CRT interference simulation |
 
 ### Planned: CSS Clouds
@@ -54,38 +54,71 @@ A full-page canvas renders 250 drifting spore particles, each an independent bio
 
 ### Cursor Proximity Glow (Cards)
 
-A JS hook (`useProximityGlow`) computes cursor distance to every interactive card each frame:
+A JS hook (`useProximityGlow`) runs a `requestAnimationFrame` loop that evaluates the full BRET kinetic equations every frame for every card:
 
-- Cards within 500px get `--prox` (0-1, quadratic falloff) driving subtle border color and box-shadow intensity
-- `--prox-x` / `--prox-y` track cursor position relative to each card
-- Phase offsets (`--bio-phase`, `--bio-phase-g`) are Weyl-distributed via frac(*n*&sdot;&radic;2) so no two cards pulse identically
+- **Spectral colors from design variables**: On mount, reads `--cyan` (donor) and `--accent` (acceptor) from computed styles, parses them to RGB, and sets `--cyan-rgb` / `--accent-rgb` on `:root`. Zero hardcoded RGB values.
+- **Proximity variables**: Cards within 400px get `--prox` (0-1, quadratic falloff). `--prox-x` / `--prox-y` track cursor position relative to each card.
 
-### BRET Energy Cascade (Cyan &rarr; Green)
+### Per-Frame BRET Physics (No Keyframes)
 
-In real BRET, a coelenterazine donor emits at ~480nm (cyan) first, then non-radiatively transfers energy to a GFP acceptor which re-emits at ~509nm (green) with a temporal delay. Energy always flows from shorter wavelength (higher energy) to longer wavelength, a thermodynamic constraint.
-
-Each hovered card runs two animation layers on separate CSS properties at Euler-ratio durations:
+**No CSS keyframes.** All temporal dynamics are computed per-frame by `useProximityGlow.js` using the actual BRET dual-exponential kinetic equations:
 
 ```
-bioBreatheCyan:  3s      (box-shadow, cyan donor pulse)
-bioBreatheGreen: 3e s    (filter, green acceptor re-emission, ~8.155s)
+Donor emission:
+  I_D(t) = (1-ε) · exp(-k_D · (t - t₀))
+
+Acceptor cascade (two-state kinetics):
+  I_A(t) = ε · k_D/(k_D - k_A) · [exp(-k_A·(t-t₀)) - exp(-k_D·(t-t₀))]
+
+Parameters:
+  ε = 0.5 (FRET efficiency), τ_D = 0.06 (donor lifetime), τ_A = 0.20 (acceptor lifetime)
+  t₀ = 0.03 (trigger time), cycle = 3s (unified for all elements)
 ```
 
-Text shifts through the emission spectrum via `textSpectrumShift`: cyan &rarr; intermediate teal &rarr; green (reversed for SE cards).
+Each frame, for each card, the JS:
+1. Updates enzyme-kinetic excitation envelope (`exc`)
+2. Advances BRET phase (resets to 0 on each new hover — hover = substrate binding event)
+3. Evaluates `donorIntensity(phase)` and `acceptorIntensity(phase)`
+4. Sets per-card CSS custom properties:
+   - `--bret-d` = excitation × donor intensity (drives `::before` opacity)
+   - `--bret-a` = excitation × acceptor intensity (drives `::after` opacity)
+   - `--bret-color` = composite FRET color (luminance-weighted donor+acceptor mix)
+   - `--bret-text` = complete `rgba()` color for text (removed when excitation=0)
+   - `--bret-glow` = complete `text-shadow` value (removed when excitation=0)
 
-### Euler's Number Duration Coupling
+### Dual Pseudo-Element Emission Channels
 
-The two glow layers run at durations coupled by **e** (Euler's number, &approx; 2.718). Where Level 3 uses &phi; (algebraic irrational from number theory), Level 2 uses *e* (transcendental, from calculus), the natural constant of exponential growth and decay and the mathematical foundation of enzyme kinetics. Near-alignment takes ~80s.
-
-### Weyl Equidistribution (Ambient Detuning)
-
-Where Level 3 distributes animation *phases* (R&#x2082; sequence, where every element starts at a different point), Level 2 distributes animation *durations* via Weyl's equidistribution theorem:
+Two pseudo-elements form independent emission channels (true additive overlap):
 
 ```
-duration_n = BASE + RANGE * frac(n * sqrt(2))
+::before = donor channel     opacity: var(--bret-d)   tight halo (40px + 80px box-shadow)
+::after  = acceptor channel  opacity: var(--bret-a)   diffuse halo (80px + 160px box-shadow)
 ```
 
-By Weyl's theorem, frac(*n*&sdot;&radic;2) is equidistributed on [0,1]. Each section line and snake track pulses at its own natural frequency (5-7s), drifting in and out of near-synchronization, like a dinoflagellate colony where each organism has its own metabolic rate.
+Each has STATIC box-shadow at full alpha — opacity alone drives temporal dynamics. Since opacity is compositable, this is GPU-accelerated (no main-thread repaints).
+
+- **Normal species** (cyan donor → green acceptor): `.snake-card`, `.pub-card`, `.lnk`, `.kw`
+- **Reversed species** (green donor → cyan acceptor): `.se-card`
+
+### Text BRET Color (JS-Driven)
+
+Text color and text-shadow are set directly by JS as complete CSS values (`--bret-text`, `--bret-glow`). When excitation drops to 0, JS removes these properties — the `var()` becomes invalid at computed-value time, the declaration is ignored, and the base text color shows through naturally. No CSS hover gates needed.
+
+### Enzyme-Kinetic Excitation Envelope
+
+Per-card excitation (0→1) using enzyme kinetics:
+
+```
+Rise (hovered):    exc += (1 - exc) * 0.08   (τ_rise ≈ 0.21s, rapid substrate binding)
+Decay (unhovered): exc *= 0.97               (τ_decay ≈ 0.55s, product-inhibited release)
+Snap to 0:         when exc < 0.005, phase resets — next hover starts emission from t=0
+```
+
+The hero name is always fully excited (exc=1), with 2.5× intensity multiplier and 3× glow radii.
+
+### Known Issue: Text/Outline Timing
+
+**UNSOLVED**: On experience cards, the text (e.g. "founding scientist") appears to fire before the card outline glow. The root cause is likely that text `color` at a given alpha is more perceptible than a diffuse box-shadow at the same opacity value — they are driven by the same JS values but the visual perception doesn't match. Attempted fixes: `bretD + bretA` (sum) → `Math.max(bretD, bretA)` (dominant channel), but the desync persists. The text and outline need to reach *perceptual* simultaneity, not just mathematical simultaneity.
 
 ### DNA Helix (Canvas)
 
@@ -93,7 +126,7 @@ The double helix uses BRET-colored strands (cyan + green) with edge-fading, spar
 
 ### SE Cards: Reversed Organism
 
-Stack Exchange cards represent a different bioluminescent species with reversed donor/acceptor: green donor flash first, cyan acceptor trailing. Text shifts green &rarr; cyan instead of cyan &rarr; green.
+Stack Exchange cards represent a different bioluminescent species with reversed donor/acceptor: green donor flash first, cyan acceptor trailing. The JS checks `card.matches('.se-card')` and swaps the `fretMix()` arguments so the composite color shifts green → cyan instead of cyan → green.
 
 ## Level 3: CRT Simulation
 

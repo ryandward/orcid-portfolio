@@ -12,7 +12,8 @@ import { useRef, useEffect, useCallback } from 'react'
  * the disturbance, like dinoflagellates reacting to mechanical shear.
  */
 
-const SPORE_COUNT = 250
+// Density: 250 spores on 1920×1080 reference ≈ 1 spore per 8294 px²
+const SPORE_DENSITY = 250 / (1920 * 1080)
 const PROXIMITY_RADIUS = 280
 const OU_THETA = 0.0003     // Ornstein-Uhlenbeck mean-reversion rate (loose spring)
 const BROWNIAN_SIGMA = 0.04 // Brownian noise amplitude (gentle wandering)
@@ -33,10 +34,11 @@ export default function BiolumField({ active }) {
   const frameRef = useRef(0)
   const timeRef = useRef(0)
 
-  // Initialize spores with individual metabolic parameters
+  // Initialize spores scaled to viewport surface area
   const initSpores = useCallback((w, h) => {
+    const count = Math.max(40, Math.min(600, Math.round(w * h * SPORE_DENSITY)))
     const spores = []
-    for (let i = 0; i < SPORE_COUNT; i++) {
+    for (let i = 0; i < count; i++) {
       const golden = (i * 0.618033988749895) % 1
       const homeX = Math.random() * w
       const homeY = Math.random() * h
