@@ -220,13 +220,13 @@ body {
 .nav--scrolled { border-bottom-color: var(--border-accent); }
 .nav-inner {
   max-width: 880px; margin: 0 auto;
-  display: flex; gap: 0; overflow-x: auto; scrollbar-width: none;
+  display: flex; justify-content: center; gap: 0; overflow-x: auto; scrollbar-width: none;
 }
 .nav-inner::-webkit-scrollbar { display: none; }
 .nav-a {
   font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--text-ghost); text-decoration: none;
-  padding: 0.8rem 1rem; white-space: nowrap;
+  padding: 0.5rem 1rem; white-space: nowrap;
   border-bottom: 1px solid transparent; transition: all 0.2s;
   position: relative;
 }
@@ -239,7 +239,7 @@ body {
 /* Nav level switcher */
 .nav-levels {
   display: flex; align-items: center; justify-content: center; gap: 2px;
-  padding: 0.25rem 0;
+  padding: 0 0 0.35rem;
 }
 .nav-lvl {
   width: 22px; height: 22px;
