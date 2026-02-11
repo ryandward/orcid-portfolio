@@ -36,6 +36,16 @@ export default function useProximityGlow(active, selector = '.glow-card, .kw') {
       mouseX = e.clientX
       mouseY = e.clientY
     }
+    function onTouchMove(e) {
+      if (e.touches.length > 0) {
+        mouseX = e.touches[0].clientX
+        mouseY = e.touches[0].clientY
+      }
+    }
+    function onTouchEnd() {
+      mouseX = -9999
+      mouseY = -9999
+    }
 
     function update() {
       const cards = document.querySelectorAll(selector)
@@ -76,10 +86,16 @@ export default function useProximityGlow(active, selector = '.glow-card, .kw') {
     }
 
     document.addEventListener('mousemove', onMouseMove, { passive: true })
+    document.addEventListener('touchmove', onTouchMove, { passive: true })
+    document.addEventListener('touchend', onTouchEnd)
+    document.addEventListener('touchcancel', onTouchEnd)
     rafRef.current = requestAnimationFrame(update)
 
     return () => {
       document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('touchmove', onTouchMove)
+      document.removeEventListener('touchend', onTouchEnd)
+      document.removeEventListener('touchcancel', onTouchEnd)
       cancelAnimationFrame(rafRef.current)
       const cards = document.querySelectorAll(selector)
       cards.forEach(el => {
