@@ -302,6 +302,14 @@ export default function App() {
         <div className="hero-bg"/>
         <div className="hero-grid" style={{ transform: `translateY(${scrollY * [0, 0, 0.12, 0.25, 0][detailLevel]}px)` }}/>
         <DnaHelix level={detailLevel}/>
+        {detailLevel === 1 && (
+          <div className="geo-banner">
+            <div className="geo-marquee">
+              <span>Welcome to my homepage! You are visitor #001337! Last updated {new Date().toLocaleDateString()}!</span>
+            </div>
+            <div className="geo-construction">Under Construction</div>
+          </div>
+        )}
         <div className="hero-inner">
           {detailLevel !== 4 && (
             <div className="hero-prompt">
@@ -522,7 +530,7 @@ export default function App() {
             <h2 className="sec-title">Links</h2>
             <div className="sec-line"/>
           </div></Reveal>
-          <div className="links-list">
+          <div className="links-list" style={{ gridTemplateColumns: `repeat(${allLinks.length % 3 === 0 ? 3 : allLinks.length % 2 === 0 ? 2 : 3}, 1fr)` }}>
               {allLinks.map((l, i) => (
                 <Reveal key={i} delay={i * 60}>
                   <GlowCard className="lnk" href={l.url}>
@@ -543,6 +551,9 @@ export default function App() {
           Publications via <a href={`https://orcid.org/${ORCID_ID}`} target="_blank" rel="noopener noreferrer">ORCID</a> &middot; Q&amp;A via <a href={`https://stackoverflow.com/users/${SE_USER_ID}`} target="_blank" rel="noopener noreferrer">Stack Exchange</a> &middot; Experience via LinkedIn
         </div>
         <div className="footer-r">auto-refreshes on every visit</div>
+        {detailLevel === 1 && (
+          <div className="geo-badge">Best viewed in Netscape Navigator 4.0 at 800x600</div>
+        )}
       </footer>
       <div className={`detail-toast ${toast ? 'visible' : ''}`}>{toast}</div>
     </div>

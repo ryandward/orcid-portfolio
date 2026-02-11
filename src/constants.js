@@ -39,5 +39,7 @@ export const LINKEDIN = {
     { name: "Discord: sambal.oelek", url: "https://discord.com/users/sambal.oelek" },
     { name: "GitHub", url: "https://github.com/ryandward" },
     { name: "Stack Overflow", url: "https://stackoverflow.com/users/714178" },
+    { name: "Email", url: "mailto:ryandward@gmail.com" },
+    { name: "Spotify", url: "https://open.spotify.com/user/dh5oh5crtcn6hxxrw28gv9dki" },
   ],
 }
