@@ -312,6 +312,7 @@ body.detail-1 .snake-node.now { animation: none; box-shadow: none; }
 .snake-role {
   transition: color 0.3s;
 }
+/* Hover accent color — in detail-2, BRET overrides this via --bret-text (higher specificity) */
 .snake-card:is(:hover,.th) .snake-role { color: var(--accent); }
 .snake-card:is(:hover,.th) .snake-dates { color: var(--text-dim); }
 .snake-card.left {
@@ -540,7 +541,7 @@ body.detail-1 .snake-node.now { animation: none; box-shadow: none; }
   border: none; border-bottom: 2px solid var(--text-ghost);
   background: transparent;
 }
-.lnk:is(:hover,.th) {
+body:not(.detail-2) .lnk:is(:hover,.th) {
   border-bottom-color: var(--accent);
   background: var(--accent-dim);
   box-shadow: none;
@@ -553,7 +554,7 @@ body.detail-1 .snake-node.now { animation: none; box-shadow: none; }
   position: relative; z-index: 1;
   transition: all 0.3s;
 }
-.lnk:is(:hover,.th) .lnk-icon { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+body:not(.detail-2) .lnk:is(:hover,.th) .lnk-icon { background: var(--accent); color: var(--bg); border-color: var(--accent); }
 .lnk-name { font-size: 0.75rem; font-weight: 700; color: var(--text-bright); position: relative; z-index: 1; }
 .lnk-url { font-size: 0.6rem; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; position: relative; z-index: 1; }
 
@@ -966,7 +967,9 @@ body.detail-1 ::selection { background: #FF00FF; color: #FFFF00; }
 /* ═══ LEVEL 2: BIOLUMINESCENT ═══ */
 /* Per-frame BRET dynamics via useProximityGlow.js. The JS hook sets --prox (0–1)
    based on cursor distance, --prox-x/--prox-y for gradient direction, and
-   --bret-d/--bret-a/--bret-color for dual-channel emission intensities.
+   --bret-d/--bret-a for dual-channel emission intensities, --bret-glow for
+   dual-channel text-shadow. --bret-text is exc-gated (fully opaque when organism
+   is active, removed at rest so base text color cascades through via CSS transition).
    Each hover starts the emission from t=0 (substrate binding = hover event). */
 
 /* ── Hero ── */
@@ -986,8 +989,7 @@ body.detail-2 .hero-bg {
 }
 
 /* Hero name — per-frame BRET dynamics via JS (3s cycle, always excited).
-   Uses same --bret-text/--bret-glow system as cards. JS applies the
-   --bret-intensity multiplier (2.5×) when computing the hero's text alpha. */
+   --bret-text always set (exc=1 permanently). Glow from JS --bret-glow. */
 body.detail-2 .hero-name-line.accent {
   animation: nameReveal 0.7s cubic-bezier(0.16,1,0.3,1) forwards;
   color: var(--bret-text);
@@ -1047,7 +1049,13 @@ body.detail-2 .kw {
    JS evaluates these every frame and sets per-card CSS custom properties:
      --bret-d     = exc × I_D(phase)      donor intensity (excitation-weighted)
      --bret-a     = exc × I_A(phase)      acceptor intensity (normalized + weighted)
-     --bret-color = composite FRET color  (luminance-weighted donor+acceptor mix)
+     --bret-text  = rgb(surface)          exc-gated: fully opaque when active, absent at rest
+     --bret-glow  = text-shadow layers    dual-channel donor + acceptor (flux-gated)
+
+   When --bret-text is absent, var(--bret-text) is invalid → declaration discarded →
+   base text color cascades through (e.g. var(--text-bright) for .snake-role).
+   CSS `transition: color` is killed (0s) on BRET text elements to prevent
+   the browser from animating through white on computed-value reevaluation.
 
    Two pseudo-elements form independent emission channels (true additive overlap):
      ::before = donor channel     opacity = var(--bret-d)   tight halo (high energy)
@@ -1056,11 +1064,13 @@ body.detail-2 .kw {
    Each has STATIC box-shadow at full alpha — opacity alone drives temporal dynamics.
    Since opacity is compositable, this is GPU-accelerated (no main-thread repaints).
 
-   Normal species (cyan donor → green acceptor):   .snake-card, .pub-card, .lnk, .kw
-   Reversed species (green donor → cyan acceptor): .se-card
+   EMISSION GEOMETRY (single source of truth in JS):
+     JS sets --bret-d-r1/r2, --bret-a-r1/r2, --bret-halo-falloff on :root at init.
+     CSS consumes these for box-shadow radii. JS uses the same constants (× TEXT_SCALE)
+     for text-shadow. Changing a radius in one place updates both systems.
 
-   --bret-spread  scales text halo size  (default 1, hero uses 3)
-   --bret-intensity  scales text halo alpha  (default 1, hero uses 2.5) */
+   Normal species (cyan donor → green acceptor):   .snake-card, .pub-card, .lnk, .kw
+   Reversed species (green donor → cyan acceptor): .se-card */
 
 /* ── Shared pseudo-element base (both emission channels) ── */
 body.detail-2 .glow-card::before,
@@ -1080,20 +1090,22 @@ body.detail-2 .glow-card::before,
 body.detail-2 .kw::before {
   opacity: var(--bret-d, 0);
 }
-/* Normal species: cyan donor */
+/* Normal species: cyan donor
+   Radii from JS via --bret-d-r1/r2. Falloff from --bret-halo-falloff.
+   Temporal dynamics: opacity = var(--bret-d) → GPU-compositable. */
 body.detail-2 .snake-card::before,
 body.detail-2 .pub-card::before,
 body.detail-2 .lnk::before,
 body.detail-2 .kw::before {
   box-shadow:
-    0 0 40px rgba(var(--cyan-rgb), 1),
-    0 0 80px rgba(var(--cyan-rgb), 0.5);
+    0 0 var(--bret-d-r1) rgba(var(--cyan-rgb), 1),
+    0 0 var(--bret-d-r2) rgba(var(--cyan-rgb), var(--bret-halo-falloff));
 }
 /* Reversed species: green donor */
 body.detail-2 .se-card::before {
   box-shadow:
-    0 0 40px rgba(var(--accent-rgb), 1),
-    0 0 80px rgba(var(--accent-rgb), 0.5);
+    0 0 var(--bret-d-r1) rgba(var(--accent-rgb), 1),
+    0 0 var(--bret-d-r2) rgba(var(--accent-rgb), var(--bret-halo-falloff));
 }
 
 /* ── Acceptor channel (::after) — diffuse, lower-energy emission ── */
@@ -1101,27 +1113,41 @@ body.detail-2 .glow-card::after,
 body.detail-2 .kw::after {
   opacity: var(--bret-a, 0);
 }
-/* Normal species: green acceptor */
+/* Normal species: green acceptor
+   Radii from JS via --bret-a-r1/r2. Falloff from --bret-halo-falloff.
+   Temporal dynamics: opacity = var(--bret-a) → GPU-compositable. */
 body.detail-2 .snake-card::after,
 body.detail-2 .pub-card::after,
 body.detail-2 .lnk::after,
 body.detail-2 .kw::after {
   box-shadow:
-    0 0 80px rgba(var(--accent-rgb), 1),
-    0 0 160px rgba(var(--accent-rgb), 0.5);
+    0 0 var(--bret-a-r1) rgba(var(--accent-rgb), 1),
+    0 0 var(--bret-a-r2) rgba(var(--accent-rgb), var(--bret-halo-falloff));
 }
 /* Reversed species: cyan acceptor */
 body.detail-2 .se-card::after {
   box-shadow:
-    0 0 80px rgba(var(--cyan-rgb), 1),
-    0 0 160px rgba(var(--cyan-rgb), 0.5);
+    0 0 var(--bret-a-r1) rgba(var(--cyan-rgb), 1),
+    0 0 var(--bret-a-r2) rgba(var(--cyan-rgb), var(--bret-halo-falloff));
 }
 
 /* ── Text BRET color cascade ──
-   JS sets --bret-text (complete rgba color) and --bret-glow (complete text-shadow)
-   per card, driven by the same BRET kinetics as the ::before/::after opacity.
-   No hover gate — when excitation=0, JS removes the properties and the var()
-   becomes invalid → declaration ignored → base text color shows through. */
+   TEXT COLOR (--bret-text): JS-driven, excitation-gated, fully opaque.
+   Set to rgb(surfaceColor) when exc > EXC_FLOOR, removed when inactive.
+   When absent, var(--bret-text) is invalid → `color` declaration discarded →
+   base text color cascades through (e.g. var(--text-bright) for .snake-role).
+   CSS transitions on color are killed (0s) in detail-2 to prevent the browser
+   from animating through white on computed-value reevaluation.
+
+   TEXT-SHADOW (--bret-glow): JS-driven, flux-gated.
+   Mirrors the outline's box-shadow exactly:
+     Outline ::before  → box-shadow at [D_R_INNER, D_R_OUTER] × [1, HALO_FALLOFF]  @ opacity bretD
+     Outline ::after   → box-shadow at [A_R_INNER, A_R_OUTER] × [1, HALO_FALLOFF]  @ opacity bretA
+     Text donor layers → text-shadow at [D_R × TEXT_SCALE] × [1, HALO_FALLOFF]     @ alpha bretD
+     Text acc. layers  → text-shadow at [A_R × TEXT_SCALE] × [1, HALO_FALLOFF]     @ alpha bretA
+
+   All geometry constants shared with JS — no duplicated values.
+   --bret-glow pulses with BRET kinetics (removed between emission peaks). */
 body.detail-2 .kw,
 body.detail-2 .snake-card .snake-role,
 body.detail-2 .pub-card .pub-year,
@@ -1133,6 +1159,9 @@ body.detail-2 .se-card .se-tag,
 body.detail-2 .se-card .se-arrow {
   color: var(--bret-text);
   text-shadow: var(--bret-glow);
+  /* Text color is JS-driven per-frame. Kill CSS transitions so text
+     stays synced with the glow. Fade-out handled by JS alpha ramp. */
+  transition: color 0s, text-shadow 0s;
 }
 body.detail-2 .pub-card:is(:hover,.th) .pub-type {
   border-color: var(--border);

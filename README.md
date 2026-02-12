@@ -56,7 +56,8 @@ A full-page canvas renders 250 drifting spore particles, each an independent bio
 
 A JS hook (`useProximityGlow`) runs a `requestAnimationFrame` loop that evaluates the full BRET kinetic equations every frame for every card:
 
-- **Spectral colors from design variables**: On mount, reads `--cyan` (donor) and `--accent` (acceptor) from computed styles, parses them to RGB, and sets `--cyan-rgb` / `--accent-rgb` on `:root`. Zero hardcoded RGB values.
+- **Spectral colors from design variables**: On mount, reads `--cyan` (donor) and `--accent` (acceptor) from computed styles, parses them to RGB, and sets `--cyan-rgb` / `--accent-rgb` on `:root`. Precomputes the fixed surface emission color `C = (1-ε)·C_donor + ε·C_acceptor` for use in `--bret-text`. Zero hardcoded RGB values.
+- **Emission geometry from JS**: Sets `--bret-d-r1`, `--bret-d-r2`, `--bret-a-r1`, `--bret-a-r2`, `--bret-halo-falloff` on `:root` at init. CSS consumes these for box-shadow; JS uses the same constants × `TEXT_SCALE` for text-shadow. Single source of truth.
 - **Proximity variables**: Cards within 400px get `--prox` (0-1, quadratic falloff). `--prox-x` / `--prox-y` track cursor position relative to each card.
 
 ### Per-Frame BRET Physics (No Keyframes)
@@ -82,27 +83,34 @@ Each frame, for each card, the JS:
 4. Sets per-card CSS custom properties:
    - `--bret-d` = excitation × donor intensity (drives `::before` opacity)
    - `--bret-a` = excitation × acceptor intensity (drives `::after` opacity)
-   - `--bret-color` = composite FRET color (luminance-weighted donor+acceptor mix)
-   - `--bret-text` = complete `rgba()` color for text (removed when excitation=0)
-   - `--bret-glow` = complete `text-shadow` value (removed when excitation=0)
+   - `--bret-text` = fully opaque surface color, exc-gated (set while active, removed at rest → base color cascades via CSS transition)
+   - `--bret-glow` = dual-channel text-shadow, flux-gated (pulses with BRET kinetics)
 
 ### Dual Pseudo-Element Emission Channels
 
 Two pseudo-elements form independent emission channels (true additive overlap):
 
 ```
-::before = donor channel     opacity: var(--bret-d)   tight halo (40px + 80px box-shadow)
-::after  = acceptor channel  opacity: var(--bret-a)   diffuse halo (80px + 160px box-shadow)
+::before = donor channel     opacity: var(--bret-d)   tight halo (var(--bret-d-r1) + var(--bret-d-r2) box-shadow)
+::after  = acceptor channel  opacity: var(--bret-a)   diffuse halo (var(--bret-a-r1) + var(--bret-a-r2) box-shadow)
 ```
 
 Each has STATIC box-shadow at full alpha — opacity alone drives temporal dynamics. Since opacity is compositable, this is GPU-accelerated (no main-thread repaints).
 
+**Emission geometry** is defined once in JS (`DONOR_R_INNER=40`, `DONOR_R_OUTER=80`, `ACCEPTOR_R_INNER=80`, `ACCEPTOR_R_OUTER=160`, `HALO_FALLOFF=0.5`) and set as CSS custom properties at init. The 2× ratio (acceptor wider than donor) models wavelength-dependent Mie scattering: shorter-wavelength donor emission (~480nm) has a tighter point-spread function than the longer-wavelength acceptor (~509nm). Text-shadow radii derive from the same constants × `TEXT_SCALE` (0.2).
+
 - **Normal species** (cyan donor → green acceptor): `.snake-card`, `.pub-card`, `.lnk`, `.kw`
 - **Reversed species** (green donor → cyan acceptor): `.se-card`
 
-### Text BRET Color (JS-Driven)
+### Text BRET: Surface vs. Field
 
-Text color and text-shadow are set directly by JS as complete CSS values (`--bret-text`, `--bret-glow`). When excitation drops to 0, JS removes these properties — the `var()` becomes invalid at computed-value time, the declaration is ignored, and the base text color shows through naturally. No CSS hover gates needed.
+The text and outline model two physically distinct phenomena:
+
+1. **Text color** = the emitting surface (excitation-gated, fully opaque). JS sets `--bret-text` to `rgb(surfaceColor)` when `exc > EXC_FLOOR`, and removes it when inactive. When absent, `var(--bret-text)` is invalid → the `color` declaration is discarded → the **base text color** (e.g. `var(--text-bright)` white for `.snake-role`) cascades through. When set, the text snaps to the fixed FRET surface color `C = (1-ε)·C_donor + ε·C_acceptor`. CSS `transition: color` is killed (`0s`) on all BRET text elements in detail-2 — otherwise the browser re-triggers the transition on every computed-value reevaluation, animating through white on each BRET cycle.
+
+2. **Text-shadow** = the emitted photon field. Two independent channel layers (donor cyan, acceptor green) with time-varying intensities follow the same BRET kinetics as the outline's `::before`/`::after` pseudo-elements. The far-field spectral shift (cyan → green as the cascade progresses) is correctly captured here because the two layers have independent alphas. Radii are derived from the same emission geometry constants × `TEXT_SCALE`.
+
+The distinction matters: at rest, text shows its base color (white). On hover, `--bret-text` is set and text immediately shows the FRET surface color (no CSS transition — it's killed in detail-2). The glow field (text-shadow + box-shadow) pulses with the BRET cascade on top. After unhover, excitation decays until `--bret-text` is removed and the base color returns.
 
 ### Enzyme-Kinetic Excitation Envelope
 
@@ -114,11 +122,7 @@ Decay (unhovered): exc *= 0.97               (τ_decay ≈ 0.55s, product-inhibi
 Snap to 0:         when exc < 0.005, phase resets — next hover starts emission from t=0
 ```
 
-The hero name is always fully excited (exc=1), with 2.5× intensity multiplier and 3× glow radii.
-
-### Known Issue: Text/Outline Timing
-
-**UNSOLVED**: On experience cards, the text (e.g. "founding scientist") appears to fire before the card outline glow. The root cause is likely that text `color` at a given alpha is more perceptible than a diffuse box-shadow at the same opacity value — they are driven by the same JS values but the visual perception doesn't match. Attempted fixes: `bretD + bretA` (sum) → `Math.max(bretD, bretA)` (dominant channel), but the desync persists. The text and outline need to reach *perceptual* simultaneity, not just mathematical simultaneity.
+The hero name is always fully excited (exc=1), modeled as a high-expression strain with `HERO_SCATTER=3` (wider PSF from more photons per cell → wider text-shadow radii).
 
 ### DNA Helix (Canvas)
 
@@ -126,7 +130,7 @@ The double helix uses BRET-colored strands (cyan + green) with edge-fading, spar
 
 ### SE Cards: Reversed Organism
 
-Stack Exchange cards represent a different bioluminescent species with reversed donor/acceptor: green donor flash first, cyan acceptor trailing. The JS checks `card.matches('.se-card')` and swaps the `fretMix()` arguments so the composite color shifts green → cyan instead of cyan → green.
+Stack Exchange cards represent a different bioluminescent species with reversed donor/acceptor: green donor flash first, cyan acceptor trailing. The species type is determined by `REVERSED_SELECTOR = '.se-card'` (single source of truth in JS) which swaps channel colors for both the outline box-shadow (via CSS selectors consuming the same `--cyan-rgb`/`--accent-rgb` variables) and the text-shadow layers.
 
 ## Level 3: CRT Simulation
 

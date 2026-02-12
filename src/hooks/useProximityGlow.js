@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
  * useProximityGlow — per-frame BRET temporal dynamics + enzyme-kinetic excitation.
  *
  * Every frame, for each card:
- *   1. Enzyme kinetics drive --excitation (0→1):
+ *   1. Enzyme kinetics drive excitation (0→1):
  *        Rise:  exc += (1 - exc) * K_BIND     (rapid substrate binding)
  *        Decay: exc *= K_RELEASE               (product-inhibited release)
  *
@@ -18,12 +18,15 @@ import { useEffect, useRef } from 'react'
  *   4. Outputs set as CSS custom properties on each card:
  *        --bret-d     = exc × I_D(phase)        (donor intensity, excitation-weighted)
  *        --bret-a     = exc × I_A(phase) × norm  (acceptor intensity, normalized + weighted)
- *        --bret-color = composite FRET color RGB  (luminance-weighted donor+acceptor mix)
+ *        --bret-text  = rgb(surface)            (exc-gated: set while active, removed at rest)
+ *        --bret-glow  = dual-channel text-shadow  (flux-gated: pulses with BRET kinetics)
  *
  *   5. CSS uses these directly:
- *        ::before  opacity = var(--bret-d)  →  donor emission channel
- *        ::after   opacity = var(--bret-a)  →  acceptor emission channel
- *        text      color = rgb(var(--bret-color))
+ *        ::before  opacity = var(--bret-d)  →  donor emission channel (far field)
+ *        ::after   opacity = var(--bret-a)  →  acceptor emission channel (far field)
+ *        text      color = var(--bret-text) →  absent at rest (base color cascades),
+ *                                               present while excited (surface FRET color)
+ *        text      text-shadow = var(--bret-glow) → emitted photon field (dual-channel)
  *
  * BRET model: dual-exponential cascade (A→B→C kinetics)
  *   Donor decays as single exponential after substrate trigger at t₀.
@@ -32,25 +35,69 @@ import { useEffect, useRef } from 'react'
  *   At any instant, both channels are independently visible — their additive
  *   overlap IS the bioluminescence resonance energy transfer.
  *
+ * Emission geometry (single source of truth):
+ *   Outline (CSS ::before/::after) and text (JS text-shadow) share the same
+ *   physical constants. JS sets CSS custom properties at init; CSS consumes them
+ *   for box-shadow radii. JS derives text-shadow radii from the same constants
+ *   via TEXT_SCALE. No magic numbers exist in CSS — all geometry is defined here.
+ *
  * Phase: resets to 0 on each new hover — the substrate binding event (t₀)
  * IS the hover. Every card shows the full emission cascade from the start.
  */
 
 const RADIUS = 400
 
-// Enzyme kinetics rate constants (per frame at ~60fps)
-const K_BIND = 0.08    // substrate binding rate (rise τ ≈ 0.21s)
-const K_RELEASE = 0.97  // product release damping (decay τ ≈ 0.55s)
-const EXC_FLOOR = 0.005 // below this, snap to 0
+// ── Enzyme kinetics rate constants (per frame at ~60fps) ──
+const K_BIND = 0.08     // substrate binding rate (rise τ ≈ 0.21s)
+const K_RELEASE = 0.97   // product release damping (decay τ ≈ 0.55s)
+const EXC_FLOOR = 0.005  // below this, snap to 0
 
-// BRET temporal dynamics (phase ∈ [0,1] maps to one full cycle)
-const EPS_FRET = 0.5   // FRET efficiency (Förster radius ≈ intermolecular distance)
-const TAU_D = 0.06      // donor luminescence lifetime (6% of cycle)
-const TAU_A = 0.20      // acceptor emission lifetime (20% of cycle)
-const T0 = 0.03         // trigger time — substrate binding event (3% of cycle)
+// ── BRET temporal dynamics (phase ∈ [0,1] maps to one full cycle) ──
+const EPS_FRET = 0.5    // FRET efficiency (Förster radius ≈ intermolecular distance)
+const TAU_D = 0.06       // donor luminescence lifetime (6% of cycle)
+const TAU_A = 0.20       // acceptor emission lifetime (20% of cycle)
+const T0 = 0.03          // trigger time — substrate binding event (3% of cycle)
 
-const K_D = 1 / TAU_D   // donor decay rate (16.67)
-const K_A = 1 / TAU_A   // acceptor decay rate (5.0)
+const K_D = 1 / TAU_D    // donor decay rate (16.67)
+const K_A = 1 / TAU_A    // acceptor decay rate (5.0)
+
+// ── Emission geometry — single source of truth ──
+// These constants define the spatial extent of each emission channel.
+// Both the CSS outline (box-shadow via custom properties) and the JS text
+// (text-shadow computed per-frame) derive from these values.
+//
+// Physical basis: donor emission has shorter wavelength (higher energy, cyan ~480nm)
+// → tighter point-spread function. Acceptor emission has longer wavelength
+// (lower energy, green ~509nm) → broader diffusion through the medium.
+// The 2× ratio (acceptor/donor) models the wavelength-dependent scattering
+// cross-section in biological tissue: σ_s ∝ λ^(-b) where b ≈ 1–2 for
+// Mie scattering in cells. At these wavelengths the ratio is approximately 2:1.
+const DONOR_R_INNER = 40    // donor tight halo radius (px)
+const DONOR_R_OUTER = 80    // donor diffuse halo radius (px)
+const ACCEPTOR_R_INNER = 80  // acceptor tight halo radius (px)
+const ACCEPTOR_R_OUTER = 160 // acceptor diffuse halo radius (px)
+
+// Halo falloff: the outer layer of each channel has this fraction of the
+// inner layer's intensity. Models radial intensity decay of a Gaussian beam
+// profile: I(r) ∝ exp(-2r²/w²). At r_outer ≈ 2×r_inner, the ratio is ~0.5.
+const HALO_FALLOFF = 0.5
+
+// Text-shadow scale relative to outline box-shadow. The text emits from the
+// same molecular complex but is rendered at smaller spatial scale (glyphs vs.
+// card boundary). This is the ratio of the text emission PSF to the outline PSF.
+const TEXT_SCALE = 0.2
+
+// ── Hero organism: wider scatter ──
+// Hero models a high-expression strain with more luciferase molecules per cell.
+// More photons → wider point-spread function for the text glow field.
+const HERO_SCATTER = 3        // PSF width multiplier (more photons → wider scatter)
+
+// ── Reversed-species selector ──
+// In the normal BRET pair, cyan is donor and green is acceptor.
+// Some organisms (modeled here as .se-card) have the reversed pair:
+// green donor → cyan acceptor. This is the single source of truth for
+// which CSS class triggers the spectral reversal.
+const REVERSED_SELECTOR = '.se-card'
 
 // Parse any CSS color to [r,g,b] via canvas 2d context
 function parseColorRgb(color) {
@@ -85,6 +132,31 @@ function acceptorIntensity(t) {
   return s < 0 ? 0 : EPS_FRET * K_D / (K_D - K_A) * (Math.exp(-K_A * s) - Math.exp(-K_D * s))
 }
 
+/**
+ * Build a CSS text-shadow string for one emission channel.
+ *
+ * Mirrors the outline's box-shadow structure exactly:
+ *   box-shadow: 0 0 R_INNER rgba(color, 1), 0 0 R_OUTER rgba(color, HALO_FALLOFF)
+ *   at pseudo-element opacity = channelIntensity
+ *
+ * For text, the effective alpha per layer is channelIntensity × layerWeight
+ * (inner = 1, outer = HALO_FALLOFF), and radii are scaled by TEXT_SCALE × scatter.
+ *
+ * This is the analytical equivalent of the outline's opacity-modulated box-shadow:
+ *   outline effective alpha = opacity × box-shadow-alpha = bretChannel × [1, HALO_FALLOFF]
+ *   text effective alpha    = text-shadow-alpha           = bretChannel × [1, HALO_FALLOFF]
+ */
+function channelTextShadow(rgb, intensity, rInner, rOuter, scale) {
+  const r1 = rInner * scale
+  const r2 = rOuter * scale
+  const a1 = intensity
+  const a2 = intensity * HALO_FALLOFF
+  return [
+    `0 0 ${r1}px rgba(${rgb},${a1.toFixed(4)})`,
+    `0 0 ${r2}px rgba(${rgb},${a2.toFixed(4)})`,
+  ]
+}
+
 export default function useProximityGlow(active, selector = '.glow-card, .kw, .hero-name-line.accent') {
   const rafRef = useRef(null)
   const excitationRef = useRef(new WeakMap())
@@ -102,8 +174,26 @@ export default function useProximityGlow(active, selector = '.glow-card, .kw, .h
     const donor = parseColorRgb(rootStyle.getPropertyValue('--cyan').trim())
     const acceptor = parseColorRgb(rootStyle.getPropertyValue('--accent').trim())
 
-    root.style.setProperty('--cyan-rgb', donor.join(','))
-    root.style.setProperty('--accent-rgb', acceptor.join(','))
+    const donorRgb = donor.join(',')
+    const accRgb = acceptor.join(',')
+
+    // ── Organism surface color (fixed spectral identity) ──
+    // C_surface = (1 - ε)·C_donor + ε·C_acceptor
+    // Precomputed once — this is a molecular constant, not a per-frame value.
+    // Since ε = 0.5, normal and reversed are identical, but we keep both for
+    // clarity if ε ever changes.
+    const surfaceRgb = fretMix(donor, acceptor, EPS_FRET).join(',')
+
+    // Set CSS custom properties consumed by outline box-shadow:
+    //   Color channels
+    root.style.setProperty('--cyan-rgb', donorRgb)
+    root.style.setProperty('--accent-rgb', accRgb)
+    //   Emission geometry (for pseudo-element box-shadow radii)
+    root.style.setProperty('--bret-d-r1', `${DONOR_R_INNER}px`)
+    root.style.setProperty('--bret-d-r2', `${DONOR_R_OUTER}px`)
+    root.style.setProperty('--bret-a-r1', `${ACCEPTOR_R_INNER}px`)
+    root.style.setProperty('--bret-a-r2', `${ACCEPTOR_R_OUTER}px`)
+    root.style.setProperty('--bret-halo-falloff', HALO_FALLOFF)
 
     // Acceptor peak normalization: scale so peak alpha = 0.50
     // t_peak = t0 + ln(k_D/k_A) / (k_D - k_A)
@@ -137,7 +227,7 @@ export default function useProximityGlow(active, selector = '.glow-card, .kw, .h
         // ── Enzyme kinetics: excitation envelope ──
         let exc = excMap.get(card) || 0
         if (isHero) {
-          exc = 1  // hero is always fully excited
+          exc = 1  // hero is always fully excited (saturated substrate)
         } else if (isHovered) {
           exc += (1 - exc) * K_BIND    // rapid substrate binding
         } else {
@@ -171,30 +261,49 @@ export default function useProximityGlow(active, selector = '.glow-card, .kw, .h
         card.style.setProperty('--bret-d', bretD.toFixed(4))
         card.style.setProperty('--bret-a', bretA.toFixed(4))
 
-        // Composite FRET color (luminance-weighted superposition at current instant)
-        const total = ID + IA_norm
-        const epsEff = total > 0 ? IA_norm / total : 0
-        const isReversed = card.matches('.se-card')
-        const composite = isReversed
-          ? fretMix(acceptor, donor, epsEff)
-          : fretMix(donor, acceptor, epsEff)
-        card.style.setProperty('--bret-color', composite.join(','))
+        // Determine species type (for channel color assignment)
+        const isReversed = card.matches(REVERSED_SELECTOR)
 
-        // Complete text color + text-shadow as CSS custom properties.
-        // When excitation drops to 0, these are removed so CSS var() becomes
-        // invalid → declaration ignored → base text color shows through.
-        const textAlpha = Math.max(bretD, bretA)
-        if (textAlpha > 0.01) {
-          const c = composite.join(',')
-          const a = Math.min(1, textAlpha * (isHero ? 2.5 : 1))
-          const r1 = isHero ? 24 : 8   // inner glow radius (hero = 3× card)
-          const r2 = isHero ? 60 : 20  // outer glow radius
-          card.style.setProperty('--bret-text', `rgba(${c},${a.toFixed(3)})`)
-          card.style.setProperty('--bret-glow',
-            `0 0 ${r1}px rgba(${c},${a.toFixed(3)}), 0 0 ${r2}px rgba(${c},${(a * 0.5).toFixed(3)})`)
+        // ── Text color: BRET-pulsed surface luminescence ──
+        // At rest, text is nearly invisible (α ≈ 0.07) — just barely perceptible.
+        // The BRET pulse is what reveals the text, like bioluminescent organisms
+        // that are invisible until they fire. Never removeProperty or 'initial' —
+        // that triggers style recalc that flashes white.
+        const DIM_FLOOR = 0.07
+        const textAlpha = exc > EXC_FLOOR
+          ? Math.max(Math.min(bretD + bretA, 1), DIM_FLOOR)
+          : DIM_FLOOR
+        card.style.setProperty('--bret-text', `rgba(${surfaceRgb},${textAlpha.toFixed(4)})`)
+
+        // ── Text glow: dual-channel photon field (flux-gated) ──
+        // The text-shadow mirrors the outline's ::before/::after box-shadow:
+        // same channels, same BRET kinetics, same radii (× TEXT_SCALE).
+        // This DOES pulse with the BRET cascade — it's the emitted light,
+        // not the surface itself.
+        //
+        // CRITICAL: never removeProperty — that triggers full style recalc on
+        // the card, which re-resolves var(--bret-text) and flashes white.
+        // Set to 'none' instead.
+        const visibleD = bretD > 0.01
+        const visibleA = bretA > 0.01
+
+        if (visibleD || visibleA) {
+          const dRgb = isReversed ? accRgb : donorRgb
+          const aRgb = isReversed ? donorRgb : accRgb
+
+          const scatter = isHero ? HERO_SCATTER : 1
+          const textScale = TEXT_SCALE * scatter
+
+          const layers = []
+          if (visibleD) {
+            layers.push(...channelTextShadow(dRgb, bretD, DONOR_R_INNER, DONOR_R_OUTER, textScale))
+          }
+          if (visibleA) {
+            layers.push(...channelTextShadow(aRgb, bretA, ACCEPTOR_R_INNER, ACCEPTOR_R_OUTER, textScale))
+          }
+          card.style.setProperty('--bret-glow', layers.join(', '))
         } else {
-          card.style.removeProperty('--bret-text')
-          card.style.removeProperty('--bret-glow')
+          card.style.setProperty('--bret-glow', 'none')
         }
 
         // ── Proximity gradient (non-hovered, non-hero cards only) ──
@@ -242,6 +351,11 @@ export default function useProximityGlow(active, selector = '.glow-card, .kw, .h
       cancelAnimationFrame(rafRef.current)
       root.style.removeProperty('--cyan-rgb')
       root.style.removeProperty('--accent-rgb')
+      root.style.removeProperty('--bret-d-r1')
+      root.style.removeProperty('--bret-d-r2')
+      root.style.removeProperty('--bret-a-r1')
+      root.style.removeProperty('--bret-a-r2')
+      root.style.removeProperty('--bret-halo-falloff')
       const cards = document.querySelectorAll(selector)
       cards.forEach(el => {
         el.style.removeProperty('--prox')
@@ -249,7 +363,6 @@ export default function useProximityGlow(active, selector = '.glow-card, .kw, .h
         el.style.removeProperty('--prox-y')
         el.style.removeProperty('--bret-d')
         el.style.removeProperty('--bret-a')
-        el.style.removeProperty('--bret-color')
         el.style.removeProperty('--bret-text')
         el.style.removeProperty('--bret-glow')
       })
