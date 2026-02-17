@@ -1,3 +1,9 @@
+export function formatNumber(n) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'm'
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k'
+  return String(n)
+}
+
 export function fmtEduDate(item) { return item['end-date']?.year?.value || 'In progress' }
 export function workYear(w) { return w['publication-date']?.year?.value || '\u2014' }
 export function cleanType(t) { return t ? t.replace(/-/g, ' ') : '' }

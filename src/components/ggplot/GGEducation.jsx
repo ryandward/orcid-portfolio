@@ -1,6 +1,6 @@
-import { useState } from 'react'
 import GGPanel from './GGPanel'
 import { linearScale, categoricalScale, ggplotHue, niceTicks, useChartSize } from './scales'
+import useGGHover from '../../hooks/useGGHover'
 
 // ggplot2-style point shapes (SVG paths centered on 0,0)
 const SHAPES = [
@@ -17,8 +17,7 @@ const SHAPES = [
 ]
 
 export default function GGEducation({ educations }) {
-  const [hoveredIdx, setHoveredIdx] = useState(null)
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+  const { hoveredKey: hoveredIdx, setHoveredKey: setHoveredIdx, mousePos, handleMouseMove } = useGGHover()
   const { ref, width, margin, maxLabelW } = useChartSize()
 
   const items = educations.map(e => {
@@ -46,13 +45,6 @@ export default function GGEducation({ educations }) {
   const yScale = categoricalScale(labels, [margin.top, margin.top + plotH])
 
   const xTickVals = niceTicks(minYear, maxYear, 6)
-
-  function handleMouseMove(e) {
-    const svg = e.currentTarget.closest('svg')
-    if (!svg) return
-    const rect = svg.getBoundingClientRect()
-    setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
-  }
 
   const legend = (
     <div className="gg-legend-rows">

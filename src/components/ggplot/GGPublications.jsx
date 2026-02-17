@@ -1,12 +1,10 @@
-import { useState, useRef } from 'react'
 import { cleanType, getDoiUrl, workYear, fixTitle } from '../../utils'
 import GGPanel from './GGPanel'
 import { linearScale, ggplotHue, niceTicks, useChartSize } from './scales'
+import useGGHover from '../../hooks/useGGHover'
 
 export default function GGPublications({ works }) {
-  const [hoveredIdx, setHoveredIdx] = useState(null)
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
-  const tappedRef = useRef(null)
+  const { hoveredKey: hoveredIdx, setHoveredKey: setHoveredIdx, mousePos, handleMouseMove, makeTapHandler } = useGGHover()
   const { ref, width, margin, maxLabelW } = useChartSize()
 
   const items = works.map(w => ({
@@ -41,13 +39,6 @@ export default function GGPublications({ works }) {
 
   const xTickVals = niceTicks(minYear, maxYear, 8)
   const yTickVals = niceTicks(0, maxStack + 1, 5).filter(v => v >= 0)
-
-  function handleMouseMove(e) {
-    const svg = e.currentTarget.closest('svg')
-    if (!svg) return
-    const rect = svg.getBoundingClientRect()
-    setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
-  }
 
   const legend = (
     <div className="gg-legend-items">
@@ -108,21 +99,7 @@ export default function GGPublications({ works }) {
               onMouseEnter={() => setHoveredIdx(i)}
               onMouseMove={handleMouseMove}
               onMouseLeave={() => setHoveredIdx(null)}
-              onClick={(e) => {
-                if (!d.doi) return
-                if ('ontouchstart' in window && tappedRef.current !== i) {
-                  e.preventDefault()
-                  tappedRef.current = i
-                  setHoveredIdx(i)
-                  const svg = e.currentTarget.closest('svg')
-                  if (svg) {
-                    const rect = svg.getBoundingClientRect()
-                    setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
-                  }
-                  return
-                }
-                window.open(d.doi, '_blank', 'noopener')
-              }}
+              onClick={makeTapHandler(i, d.doi)}
               style={{ cursor: d.doi ? 'pointer' : 'default' }}
             >
               <circle

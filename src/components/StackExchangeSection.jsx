@@ -1,3 +1,4 @@
+import { formatNumber } from '../utils'
 import Reveal from './Reveal'
 import GlowCard from './GlowCard'
 import { Arrow } from './Icons'
@@ -6,12 +7,6 @@ function decodeHtml(s) {
   const el = document.createElement('textarea')
   el.innerHTML = s
   return el.value
-}
-
-function formatNumber(n) {
-  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'm'
-  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k'
-  return String(n)
 }
 
 function SiteGroup({ site, delay }) {

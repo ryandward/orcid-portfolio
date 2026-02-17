@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useLayoutEffect, useRef } from 'react'
-import { ORCID_ID, API_BASE, HEADERS, LINKEDIN, FALLBACK_BIO, TAGLINE, SE_USER_ID, SE_API, SE_KEY, SE_FILTER } from './constants'
-import { workYear, cleanType, getDoiUrl, fixTitle } from './utils'
+import React, { useState, useEffect } from 'react'
+import { ORCID_ID, LINKEDIN, FALLBACK_BIO, TAGLINE, SE_USER_ID } from './constants'
+import { cleanType, getDoiUrl, fixTitle, workYear } from './utils'
+import { fetchOrcidData, fetchStackExchange } from './api'
 import { Arrow, Chain } from './components/Icons'
 import CountUp from './components/CountUp'
 import Typer from './components/Typer'
@@ -10,6 +11,10 @@ import Reveal from './components/Reveal'
 import GlowCard from './components/GlowCard'
 import useProximityGlow from './hooks/useProximityGlow'
 import useGcdGrid from './hooks/useGcdGrid'
+import useDetailLevel from './hooks/useDetailLevel'
+import useTouchHover from './hooks/useTouchHover'
+import useCrtEffects from './hooks/useCrtEffects'
+import useWeylDetuning from './hooks/useWeylDetuning'
 import SnakeTimeline from './components/SnakeTimeline'
 import StackExchangeSection from './components/StackExchangeSection'
 import GGExperience from './components/ggplot/GGExperience'
@@ -27,8 +32,12 @@ export default function App() {
   const [educations, setEducations] = useState([])
   const [seData, setSeData] = useState([])
   const [scrollY, setScrollY] = useState(0)
-  const [detailLevel, setDetailLevel] = useState(3)
-  const [toast, setToast] = useState(null)
+
+  const { detailLevel, setDetailLevel, toast } = useDetailLevel(3)
+  useTouchHover(detailLevel)
+  useCrtEffects(detailLevel)
+  useWeylDetuning(detailLevel)
+  useProximityGlow(detailLevel === 2)
 
   useEffect(() => {
     const onScroll = () => setScrollY(window.scrollY)
@@ -36,254 +45,20 @@ export default function App() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  useLayoutEffect(() => {
-    document.body.className = `detail-${detailLevel}`
-  }, [detailLevel])
-
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
-      const n = parseInt(e.key)
-      if (n >= 1 && n <= 4) setDetailLevel(n)
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
-
-  const didMount = useRef(false)
-  useEffect(() => {
-    if (!didMount.current) { didMount.current = true; return }
-    const labels = { 1: 'css: unloaded', 2: 'detail: normal', 3: 'EDITORIAL MODE', 4: 'ggplot(my_resume)' }
-    setToast(labels[detailLevel])
-    const id = setTimeout(() => setToast(null), 1500)
-    return () => clearTimeout(id)
-  }, [detailLevel])
-
-  // Touch-hover for level 3: first tap shows CRT effects, second tap navigates
-  useEffect(() => {
-    if (detailLevel < 2) return
-    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
-    if (!isTouch) return
-
-    function handleClick(e) {
-      const el = e.target.closest('.snake-card, .pub-card, .se-card, .kw, .lnk')
-      document.querySelectorAll('.th').forEach(node => {
-        if (node !== el) node.classList.remove('th')
-      })
-      if (!el) return
-      if (el.classList.contains('th')) {
-        el.classList.remove('th')
-        return
-      }
-      e.preventDefault()
-      el.classList.add('th')
-    }
-
-    document.addEventListener('click', handleClick, true)
-    return () => {
-      document.removeEventListener('click', handleClick, true)
-      document.querySelectorAll('.th').forEach(n => n.classList.remove('th'))
-    }
-  }, [detailLevel])
-
-  // R₂ low-discrepancy sequence for CRT phase distribution.
-  // The plastic constant p ≈ 1.3247 (real root of p³ = p + 1) generates
-  // the optimal 2D quasi-random sequence: offset_n = (n/p mod 1, n/p² mod 1).
-  // Each always-on element gets a unique (dim, split) phase pair that fills
-  // the 2D phase space as uniformly as possible — no clumping, no gaps.
-  useEffect(() => {
-    if (detailLevel !== 3) return
-    const PHI = (1 + Math.sqrt(5)) / 2
-    const PLASTIC = 1.32471795724474602596
-    const DIM_DUR = 4
-    const SPLIT_DUR = DIM_DUR * PHI
-    const els = document.querySelectorAll('.hero-name-line.accent, .kw')
-    els.forEach((el, i) => {
-      const n = i + 1
-      const r2_dim   = (n / PLASTIC) % 1
-      const r2_split = (n / (PLASTIC * PLASTIC)) % 1
-      el.style.animationDelay =
-        `${-(r2_dim * DIM_DUR).toFixed(3)}s, ${-(r2_split * SPLIT_DUR).toFixed(3)}s`
-    })
-    return () => els.forEach(el => { el.style.animationDelay = '' })
-  }, [detailLevel])
-
-  // CRT noise — double-buffered SVG filters with CSS custom property flipping.
-  // Three cross-browser problems solved simultaneously:
-  //   1. Chrome resolves url(#id) in external CSS against the stylesheet URL,
-  //      breaking inline SVG filter references. We inject a <style> in <head>.
-  //   2. Chrome won't repaint when referenced SVG filter attributes change via
-  //      setAttribute. We flip CSS custom properties (--crt-f, --crt-f-lg)
-  //      between two buffer pairs (A/B) so the *computed filter value* changes.
-  //   3. Safari ignores SMIL <animate> on feTurbulence seed. We use JS + a
-  //      baseFrequency nudge to force WebKit to re-render the filter.
-  useEffect(() => {
-    if (detailLevel !== 3) return
-    const root = document.documentElement
-    // Inject <style> in <head> — rules use CSS custom properties for the filter URL
-    const style = document.createElement('style')
-    style.textContent = [
-      'body.detail-3 .hero-name-line.accent { filter: var(--crt-f-lg); }',
-      'body.detail-3 .snake-card:is(:hover,.th),',
-      'body.detail-3 .pub-card:is(:hover,.th),',
-      'body.detail-3 .se-card:is(:hover,.th),',
-      'body.detail-3 .lnk:is(:hover,.th),',
-      'body.detail-3 .kw:is(:hover,.th),',
-      'body.detail-3 .nav-a:is(:hover,.th) { filter: var(--crt-f); }',
-    ].join('\n')
-    document.head.appendChild(style)
-    // Set initial filter references on :root
-    root.style.setProperty('--crt-f', 'url(#crt-noise-a)')
-    root.style.setProperty('--crt-f-lg', 'url(#crt-noise-lg-a)')
-    let seed = 0
-    let buf = 'a'
-    const id = setInterval(() => {
-      seed = (seed + 1) % 12
-      const next = buf === 'a' ? 'b' : 'a'
-      // Update the off-screen buffer's seed before flipping to it
-      document.querySelectorAll(`[data-crt-buf="${next}"]`).forEach(el => {
-        el.setAttribute('seed', seed)
-        // Nudge baseFrequency to force Safari/WebKit to re-render the filter
-        el.setAttribute('baseFrequency', seed % 2 === 0 ? '0.015 0.8' : '0.0150001 0.8')
-      })
-      buf = next
-      // Flip custom properties — changes the computed filter value, forcing repaint
-      root.style.setProperty('--crt-f', `url(#crt-noise-${next})`)
-      root.style.setProperty('--crt-f-lg', `url(#crt-noise-lg-${next})`)
-    }, 83) // ~12fps
-    return () => {
-      clearInterval(id)
-      style.remove()
-      root.style.removeProperty('--crt-f')
-      root.style.removeProperty('--crt-f-lg')
-    }
-  }, [detailLevel])
-
-  // Weyl equidistribution for Level 2 ambient detuning.
-  // By Weyl's theorem, frac(n·√2) is equidistributed on [0,1].
-  // Each element gets a unique duration, so oscillators drift in/out of
-  // near-sync — like a dinoflagellate colony with individual metabolic rates.
-  useEffect(() => {
-    if (detailLevel !== 2) return
-    const SQRT2 = Math.SQRT2
-    const BASE = 5
-    const RANGE = 2
-    const els = document.querySelectorAll('.sec-line, .snake-track')
-    els.forEach((el, i) => {
-      const n = i + 1
-      const weyl = (n * SQRT2) % 1
-      el.style.setProperty('--bio-dur', `${(BASE + RANGE * weyl).toFixed(3)}s`)
-    })
-    return () => els.forEach(el => el.style.removeProperty('--bio-dur'))
-  }, [detailLevel])
-
-  // Mouse proximity glow for level 2 cards
-  useProximityGlow(detailLevel === 2)
-
   // GCD-smart grids for nav + links
   const [navRef, navCols] = useGcdGrid(80, 0, loading)
   const [linksRef, linkCols] = useGcdGrid(240, 12, loading)
 
-  const SE_CACHE_KEY = 'se_cache_v4'
-  const SE_CACHE_TTL = 60 * 60 * 1000 // 1 hour
-
-  async function fetchStackExchange() {
-    try {
-      const cached = localStorage.getItem(SE_CACHE_KEY)
-      if (cached) {
-        const { data, ts } = JSON.parse(cached)
-        if (Date.now() - ts < SE_CACHE_TTL && data.length > 0) return data
-      }
-    } catch {}
-
-    try {
-      const soRes = await fetch(`${SE_API}/users/${SE_USER_ID}?site=stackoverflow&key=${SE_KEY}`)
-      const soData = await soRes.json()
-      const accountId = soData.items?.[0]?.account_id
-      if (!accountId) return []
-
-      const assocRes = await fetch(`${SE_API}/users/${accountId}/associated?pagesize=100&key=${SE_KEY}`)
-      const assocData = await assocRes.json()
-
-      const activeSites = (assocData.items || []).filter(s => s.reputation >= 500)
-
-      const siteData = await Promise.all(activeSites.map(async site => {
-        const hostname = new URL(site.site_url).hostname
-        const apiName = hostname.split('.')[0]
-        const [qRes, aRes] = await Promise.all([
-          fetch(`${SE_API}/users/${site.user_id}/questions?order=desc&sort=votes&site=${apiName}&pagesize=5&key=${SE_KEY}&filter=${encodeURIComponent(SE_FILTER)}`).then(r => r.json()),
-          fetch(`${SE_API}/users/${site.user_id}/answers?order=desc&sort=votes&site=${apiName}&pagesize=3&key=${SE_KEY}&filter=${encodeURIComponent(SE_FILTER)}`).then(r => r.json()),
-        ])
-
-        const answers = aRes.items || []
-        let answersWithTitles = answers
-        if (answers.length > 0) {
-          const qIds = answers.map(a => a.question_id).join(';')
-          const qtRes = await fetch(`${SE_API}/questions/${qIds}?site=${apiName}&key=${SE_KEY}`).then(r => r.json())
-          const titleMap = {}
-          for (const q of (qtRes.items || [])) titleMap[q.question_id] = q.title
-          answersWithTitles = answers.map(a => ({ ...a, question_title: titleMap[a.question_id] || null }))
-        }
-
-        const filteredQ = (qRes.items || []).filter(q => q.score >= 10)
-        const filteredA = answersWithTitles.filter(a => a.score >= 5)
-        return { ...site, questions: filteredQ, answers: filteredA }
-      }))
-
-      const result = siteData
-        .filter(s => s.questions.length > 0 || s.answers.length > 0)
-        .sort((a, b) => {
-          const scoreA = [...a.questions, ...a.answers].reduce((s, x) => s + (x.score || 0), 0)
-          const scoreB = [...b.questions, ...b.answers].reduce((s, x) => s + (x.score || 0), 0)
-          return scoreB - scoreA
-        })
-
-      try { localStorage.setItem(SE_CACHE_KEY, JSON.stringify({ data: result, ts: Date.now() })) } catch {}
-      return result
-    } catch (err) {
-      console.warn('Stack Exchange fetch failed:', err)
-      return []
-    }
-  }
-
   async function fetchData() {
     setLoading(true); setError(null)
     try {
-      const [pRes, wRes, eRes, seResult] = await Promise.all([
-        fetch(`${API_BASE}/person`, { headers: HEADERS }),
-        fetch(`${API_BASE}/works`, { headers: HEADERS }),
-        fetch(`${API_BASE}/educations`, { headers: HEADERS }),
+      const [{ person: p, works: w, educations: e }, seResult] = await Promise.all([
+        fetchOrcidData(),
         fetchStackExchange(),
       ])
-      if (!pRes.ok) throw new Error('ORCID API returned ' + pRes.status)
-      setPerson(await pRes.json())
-      const wd = await wRes.json()
-      const summaries = (wd.group || []).map(g => g['work-summary']?.[0]).filter(Boolean)
-        .sort((a, b) => (parseInt(workYear(b)) || 0) - (parseInt(workYear(a)) || 0))
-      const withLabs = await Promise.all(summaries.map(async w => {
-        try {
-          const full = await fetch(`${API_BASE}/work/${w['put-code']}`, { headers: HEADERS }).then(r => r.json())
-          const contribs = (full?.contributors?.contributor || [])
-            .filter(c => !c['contributor-attributes']?.['contributor-role'] || c['contributor-attributes']['contributor-role'] === 'author')
-          if (contribs.length > 0) {
-            const last = contribs[contribs.length - 1]?.['credit-name']?.value
-            if (last) {
-              const surname = last.split(' ').pop().replace(/,$/, '')
-              return { ...w, labName: `${surname} Lab` }
-            }
-          }
-        } catch {}
-        return w
-      }))
-      setWorks(withLabs)
-      const ed = await eRes.json()
-      setEducations(
-        (ed['affiliation-group'] || []).map(g => g.summaries?.[0]?.['education-summary']).filter(Boolean)
-          .sort((a, b) =>
-            (parseInt(b['end-date']?.year?.value || b['start-date']?.year?.value) || 0) -
-            (parseInt(a['end-date']?.year?.value || a['start-date']?.year?.value) || 0)
-          )
-      )
+      setPerson(p)
+      setWorks(w)
+      setEducations(e)
       setSeData(seResult)
     } catch (err) { setError(err.message) }
     finally { setLoading(false) }
@@ -325,13 +100,9 @@ export default function App() {
           asymmetric baseFrequency (low X=0.015, high Y=0.8) creates coherent
           horizontal banding per scan line. Two identical A/B pairs allow the JS
           seed cycling to flip the CSS url() reference on each tick, forcing all
-          browsers to repaint. See CRT useEffect above. */}
+          browsers to repaint. See useCrtEffects hook. */}
       <svg style={{ position: 'absolute', width: 0, height: 0 }} aria-hidden="true">
         <defs>
-          <filter id="cloud-turbulence">
-            <feTurbulence type="fractalNoise" baseFrequency=".01" numOctaves="6" seed="2" />
-            <feDisplacementMap in="SourceGraphic" scale="170" />
-          </filter>
           {['a', 'b'].map(buf => (
             <React.Fragment key={buf}>
               <filter id={`crt-noise-lg-${buf}`} x="-5%" y="-5%" width="110%" height="110%">

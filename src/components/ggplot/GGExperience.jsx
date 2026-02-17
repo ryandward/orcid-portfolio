@@ -1,10 +1,9 @@
-import { useState } from 'react'
 import GGPanel from './GGPanel'
 import { linearScale, categoricalScale, parseMonthYear, ggplotHue, niceTicks, useChartSize } from './scales'
+import useGGHover from '../../hooks/useGGHover'
 
 export default function GGExperience({ experience }) {
-  const [hoveredIdx, setHoveredIdx] = useState(null)
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+  const { hoveredKey: hoveredIdx, setHoveredKey: setHoveredIdx, mousePos, handleMouseMove } = useGGHover()
   const { ref, width, margin, maxLabelW } = useChartSize()
 
   const now = new Date()
@@ -34,13 +33,6 @@ export default function GGExperience({ experience }) {
   const yScale = categoricalScale(roles, [margin.top, margin.top + plotH])
 
   const xTickVals = niceTicks(minYear, maxYear, 6)
-
-  function handleMouseMove(e) {
-    const svg = e.currentTarget.closest('svg')
-    if (!svg) return
-    const rect = svg.getBoundingClientRect()
-    setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
-  }
 
   const legend = (
     <div className="gg-legend-items">

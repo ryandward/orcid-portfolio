@@ -1,11 +1,11 @@
-import { useState, useMemo, useRef } from 'react'
+import { useMemo } from 'react'
+import { formatNumber } from '../../utils'
 import GGPanel from './GGPanel'
 import { linearScale, categoricalScale, ggplotHue, niceTicks, useChartSize } from './scales'
+import useGGHover from '../../hooks/useGGHover'
 
 export default function GGStackExchange({ seData }) {
-  const [hoveredKey, setHoveredKey] = useState(null)
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
-  const tappedRef = useRef(null)
+  const { hoveredKey, setHoveredKey, mousePos, handleMouseMove, makeTapHandler } = useGGHover()
   const { ref, width, margin, maxLabelW } = useChartSize()
 
   const sites = useMemo(() => seData.map(s => {
@@ -68,13 +68,6 @@ export default function GGStackExchange({ seData }) {
   const allSegments = sites.flatMap(s => s.segments)
   const colorFor = (siteIdx, segIdx) => ggplotHue(Math.max(allSegments.length, 1), sites.slice(0, siteIdx).reduce((n, s) => n + s.segments.length, 0) + segIdx)
 
-  function handleMouseMove(e) {
-    const svg = e.currentTarget.closest('svg')
-    if (!svg) return
-    const rect = svg.getBoundingClientRect()
-    setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
-  }
-
   const hoveredSeg = hoveredKey !== null
     ? sites.flatMap((s, si) => s.segments.map((seg, qi) => ({ ...seg, key: `${si}-${qi}` }))).find(s => s.key === hoveredKey)
     : null
@@ -106,7 +99,7 @@ export default function GGStackExchange({ seData }) {
         yTicks={names}
         xScale={xScale}
         yScale={yScale}
-        formatX={v => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : String(Math.round(v))}
+        formatX={v => formatNumber(Math.round(v))}
         formatY={v => v}
         xLabel="Reputation"
         tooltip={tooltip}
@@ -136,20 +129,7 @@ export default function GGStackExchange({ seData }) {
                     onMouseEnter={() => setHoveredKey(key)}
                     onMouseMove={handleMouseMove}
                     onMouseLeave={() => setHoveredKey(null)}
-                    onClick={(e) => {
-                      if ('ontouchstart' in window && tappedRef.current !== key) {
-                        e.preventDefault()
-                        tappedRef.current = key
-                        setHoveredKey(key)
-                        const svg = e.currentTarget.closest('svg')
-                        if (svg) {
-                          const rect = svg.getBoundingClientRect()
-                          setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
-                        }
-                        return
-                      }
-                      window.open(seg.link, '_blank', 'noopener')
-                    }}
+                    onClick={makeTapHandler(key, seg.link)}
                   />
                 )
               })}
