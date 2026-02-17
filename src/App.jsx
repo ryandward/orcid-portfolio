@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { ORCID_ID, API_BASE, HEADERS, LINKEDIN, FALLBACK_BIO, TAGLINE, SE_USER_ID, SE_API, SE_KEY, SE_FILTER } from './constants'
 import { workYear, cleanType, getDoiUrl, fixTitle } from './utils'
 import { Arrow, Chain } from './components/Icons'
@@ -108,23 +108,55 @@ export default function App() {
     return () => els.forEach(el => { el.style.animationDelay = '' })
   }, [detailLevel])
 
-  // CRT noise seed cycling — JS-driven for Safari/WebKit compatibility.
-  // SMIL <animate> on feTurbulence seed doesn't work in WebKit, so we
-  // manually cycle the seed attribute at ~12fps for jittery noise.
+  // CRT noise — double-buffered SVG filters with CSS custom property flipping.
+  // Three cross-browser problems solved simultaneously:
+  //   1. Chrome resolves url(#id) in external CSS against the stylesheet URL,
+  //      breaking inline SVG filter references. We inject a <style> in <head>.
+  //   2. Chrome won't repaint when referenced SVG filter attributes change via
+  //      setAttribute. We flip CSS custom properties (--crt-f, --crt-f-lg)
+  //      between two buffer pairs (A/B) so the *computed filter value* changes.
+  //   3. Safari ignores SMIL <animate> on feTurbulence seed. We use JS + a
+  //      baseFrequency nudge to force WebKit to re-render the filter.
   useEffect(() => {
     if (detailLevel !== 3) return
-    const turbs = document.querySelectorAll('[data-crt-turb]')
-    if (!turbs.length) return
+    const root = document.documentElement
+    // Inject <style> in <head> — rules use CSS custom properties for the filter URL
+    const style = document.createElement('style')
+    style.textContent = [
+      'body.detail-3 .hero-name-line.accent { filter: var(--crt-f-lg); }',
+      'body.detail-3 .snake-card:is(:hover,.th),',
+      'body.detail-3 .pub-card:is(:hover,.th),',
+      'body.detail-3 .se-card:is(:hover,.th),',
+      'body.detail-3 .lnk:is(:hover,.th),',
+      'body.detail-3 .kw:is(:hover,.th),',
+      'body.detail-3 .nav-a:is(:hover,.th) { filter: var(--crt-f); }',
+    ].join('\n')
+    document.head.appendChild(style)
+    // Set initial filter references on :root
+    root.style.setProperty('--crt-f', 'url(#crt-noise-a)')
+    root.style.setProperty('--crt-f-lg', 'url(#crt-noise-lg-a)')
     let seed = 0
+    let buf = 'a'
     const id = setInterval(() => {
       seed = (seed + 1) % 12
-      turbs.forEach(el => {
+      const next = buf === 'a' ? 'b' : 'a'
+      // Update the off-screen buffer's seed before flipping to it
+      document.querySelectorAll(`[data-crt-buf="${next}"]`).forEach(el => {
         el.setAttribute('seed', seed)
         // Nudge baseFrequency to force Safari/WebKit to re-render the filter
         el.setAttribute('baseFrequency', seed % 2 === 0 ? '0.015 0.8' : '0.0150001 0.8')
       })
+      buf = next
+      // Flip custom properties — changes the computed filter value, forcing repaint
+      root.style.setProperty('--crt-f', `url(#crt-noise-${next})`)
+      root.style.setProperty('--crt-f-lg', `url(#crt-noise-lg-${next})`)
     }, 83) // ~12fps
-    return () => clearInterval(id)
+    return () => {
+      clearInterval(id)
+      style.remove()
+      root.style.removeProperty('--crt-f')
+      root.style.removeProperty('--crt-f-lg')
+    }
   }, [detailLevel])
 
   // Weyl equidistribution for Level 2 ambient detuning.
@@ -288,45 +320,36 @@ export default function App() {
 
   return (
     <div className="portfolio">
-      {/* SVG feTurbulence displacement filter for CRT cathode noise.
+      {/* Double-buffered SVG feTurbulence filters for CRT cathode noise.
           Perlin gradient noise (1983) generates fractal Brownian motion;
           asymmetric baseFrequency (low X=0.015, high Y=0.8) creates coherent
-          horizontal banding per scan line. Seed cycles discretely at ~12fps
-          for jittery, non-interpolated pattern changes. */}
+          horizontal banding per scan line. Two identical A/B pairs allow the JS
+          seed cycling to flip the CSS url() reference on each tick, forcing all
+          browsers to repaint. See CRT useEffect above. */}
       <svg style={{ position: 'absolute', width: 0, height: 0 }} aria-hidden="true">
         <defs>
           <filter id="cloud-turbulence">
             <feTurbulence type="fractalNoise" baseFrequency=".01" numOctaves="6" seed="2" />
             <feDisplacementMap in="SourceGraphic" scale="170" />
           </filter>
-          <filter id="crt-noise-lg" x="-5%" y="-5%" width="110%" height="110%">
-            <feTurbulence data-crt-turb="" type="fractalNoise" baseFrequency="0.015 0.8"
-              numOctaves="3" result="noise" seed="0"/>
-            <feDisplacementMap in="SourceGraphic" in2="noise"
-              scale="4" xChannelSelector="R" yChannelSelector="G"/>
-          </filter>
-          <filter id="crt-noise" x="-5%" y="-5%" width="110%" height="110%">
-            <feTurbulence data-crt-turb="" type="fractalNoise" baseFrequency="0.015 0.8"
-              numOctaves="3" result="noise" seed="0"/>
-            <feDisplacementMap in="SourceGraphic" in2="noise"
-              scale="2" xChannelSelector="R" yChannelSelector="G"/>
-          </filter>
+          {['a', 'b'].map(buf => (
+            <React.Fragment key={buf}>
+              <filter id={`crt-noise-lg-${buf}`} x="-5%" y="-5%" width="110%" height="110%">
+                <feTurbulence data-crt-buf={buf} type="fractalNoise" baseFrequency="0.015 0.8"
+                  numOctaves="3" result="noise" seed="0"/>
+                <feDisplacementMap in="SourceGraphic" in2="noise"
+                  scale="4" xChannelSelector="R" yChannelSelector="G"/>
+              </filter>
+              <filter id={`crt-noise-${buf}`} x="-5%" y="-5%" width="110%" height="110%">
+                <feTurbulence data-crt-buf={buf} type="fractalNoise" baseFrequency="0.015 0.8"
+                  numOctaves="3" result="noise" seed="0"/>
+                <feDisplacementMap in="SourceGraphic" in2="noise"
+                  scale="2" xChannelSelector="R" yChannelSelector="G"/>
+              </filter>
+            </React.Fragment>
+          ))}
         </defs>
       </svg>
-      {/* Inline <style> so filter: url(#id) resolves against the document URL.
-          In production builds Vite extracts CSS to an external file; Chrome resolves
-          fragment-only URLs in external CSS against the stylesheet's URL, silently
-          breaking inline SVG filter references. Inline <style> always resolves
-          against the document where the SVG <filter> elements live. */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        body.detail-3 .hero-name-line.accent { filter: url(#crt-noise-lg); }
-        body.detail-3 .snake-card:is(:hover,.th),
-        body.detail-3 .pub-card:is(:hover,.th),
-        body.detail-3 .se-card:is(:hover,.th),
-        body.detail-3 .lnk:is(:hover,.th),
-        body.detail-3 .kw:is(:hover,.th),
-        body.detail-3 .nav-a:is(:hover,.th) { filter: url(#crt-noise); }
-      `}} />
       <BiolumField active={detailLevel === 2}/>
       <SmoothResize><header className="hero">
         <div className="hero-bg"/>
