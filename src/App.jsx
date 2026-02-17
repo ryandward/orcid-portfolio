@@ -313,6 +313,20 @@ export default function App() {
           </filter>
         </defs>
       </svg>
+      {/* Inline <style> so filter: url(#id) resolves against the document URL.
+          In production builds Vite extracts CSS to an external file; Chrome resolves
+          fragment-only URLs in external CSS against the stylesheet's URL, silently
+          breaking inline SVG filter references. Inline <style> always resolves
+          against the document where the SVG <filter> elements live. */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        body.detail-3 .hero-name-line.accent { filter: url(#crt-noise-lg); }
+        body.detail-3 .snake-card:is(:hover,.th),
+        body.detail-3 .pub-card:is(:hover,.th),
+        body.detail-3 .se-card:is(:hover,.th),
+        body.detail-3 .lnk:is(:hover,.th),
+        body.detail-3 .kw:is(:hover,.th),
+        body.detail-3 .nav-a:is(:hover,.th) { filter: url(#crt-noise); }
+      `}} />
       <BiolumField active={detailLevel === 2}/>
       <SmoothResize><header className="hero">
         <div className="hero-bg"/>

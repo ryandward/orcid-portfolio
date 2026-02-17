@@ -1335,7 +1335,6 @@ body.detail-3 .hero-name-line.accent {
     0.03em 0 0 rgba(0,212,255,0.3);
 
   animation: crtDim 4s ease-in-out infinite, crtSplit 6.472s ease-in-out infinite;
-  filter: url(#crt-noise-lg);
   transform: translateZ(0);
 }
 body.detail-3 .hero-bio {
@@ -1498,25 +1497,20 @@ body.detail-3 .lnk:is(:hover,.th) .lnk-name {
 body.detail-3 .glow-card { background: transparent; transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s; }
 body.detail-3 .glow-card:is(:hover,.th) { border-color: rgba(0,0,0,0.08); box-shadow: none; }
 
-/* Settled hover — lifted with chromatic split shadow (a la Ward) */
+/* Settled hover — lifted with chromatic split shadow (a la Ward).
+   translateZ(0) forces own compositing layer for Safari feTurbulence rendering.
+   filter: url(#crt-noise) is in an inline <style> in App.jsx so that the
+   fragment URL resolves against the document (not the external CSS file). */
 body.detail-3 .snake-card:is(:hover,.th),
 body.detail-3 .pub-card:is(:hover,.th),
 body.detail-3 .se-card:is(:hover,.th),
 body.detail-3 .kw:is(:hover,.th),
 body.detail-3 .lnk:is(:hover,.th) {
-  transform: translateY(-3px);
+  transform: translateY(-3px) translateZ(0);
   box-shadow: -0.15em 0 0 rgba(255,0,110,0.3), 0.15em 0 0 rgba(0,212,255,0.3);
 }
-
-/* CRT displacement noise on hover — applied via SVG filter */
-body.detail-3 .snake-card:is(:hover,.th),
-body.detail-3 .pub-card:is(:hover,.th),
-body.detail-3 .se-card:is(:hover,.th),
-body.detail-3 .lnk:is(:hover,.th),
-body.detail-3 .kw:is(:hover,.th),
 body.detail-3 .nav-a:is(:hover,.th) {
-  filter: url(#crt-noise);
-  transform: translateZ(0); /* Safari: force own compositing layer to fix feTurbulence render lines */
+  transform: translateZ(0);
 }
 
 /* CRT scanline overlay — card becomes a monitor on hover */
