@@ -9,7 +9,7 @@ export const SE_FILTER = '!FuhdYD2u)f5mDp8hdYF).fIFse' // includes up/down_vote_
 
 export const TAGLINE = 'researcher / engineer / builder'
 
-export const FALLBACK_BIO = "Geneticist and computational biologist who builds tools for people who don't know what GitHub is. CRISPRi pipelines for a lab that needed them yesterday. A fair loot system for 479 EverQuest players who just want their dragon drops. Zero GitHub stars. Lots of users."
+export const FALLBACK_BIO = "Geneticist, computational biologist, data engineer."
 
 export const LINKEDIN = {
   headline: "PhD Geneticist",
