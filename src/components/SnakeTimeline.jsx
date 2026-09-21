@@ -23,7 +23,11 @@ export default function SnakeTimeline({ items, type }) {
                       {item.location && <span className="snake-loc"> / {item.location}</span>}
                     </div>
                     <div className="snake-role">{item.title}</div>
-                    <div className="snake-org">{item.org}</div>
+                    <div className="snake-org">
+                      {item.url
+                        ? <a href={item.url} target="_blank" rel="noopener noreferrer">{item.org}</a>
+                        : item.org}
+                    </div>
                   </>
                 ) : (
                   <>

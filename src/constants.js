@@ -15,7 +15,7 @@ export const LINKEDIN = {
   headline: "PhD Geneticist",
   location: "Santa Barbara, CA",
   experience: [
-    { title: "Founding Scientist", org: "Stealth Startup", start: "Feb 2026", end: null, current: true },
+    { title: "Founding Scientist", org: "Nurture.bio", url: "https://nurture.bio", start: "Feb 2026", end: null, current: true },
     { title: "Senior Scientist", org: "Temporal Agriculture", start: "Jan 2025", end: "Jan 2026", location: "Santa Barbara, CA" },
     { title: "Postdoctoral Researcher", org: "University of Wisconsin\u2013Madison", start: "Dec 2024", end: "Jan 2025" },
     { title: "PhD Researcher", org: "University of Wisconsin\u2013Madison", start: "Sep 2019", end: "Dec 2024" },
